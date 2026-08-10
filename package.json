@@ -1,0 +1,15 @@
+{
+  "name": "mundial-api-jwt",
+  "version": "1.0.0",
+  "description": "API REST para gestion del Mundial con JWT, roles, reglas de negocio y SQLite.",
+  "type": "module",
+  "scripts": {
+    "start": "node --no-warnings src/server.mjs",
+    "dev": "node --watch --no-warnings src/server.mjs",
+    "verify": "node --no-warnings scripts/verify.mjs"
+  },
+  "engines": {
+    "node": ">=23.0.0"
+  },
+  "license": "MIT"
+}
