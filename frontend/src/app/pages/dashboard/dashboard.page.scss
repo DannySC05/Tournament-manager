@@ -1,0 +1,19 @@
+.dashboard { margin: 0 auto; max-width: 1160px; padding: 4rem 5vw; }
+.dashboard-heading { align-items: flex-start; border-bottom: 1px solid #dbe1e5; display: flex; justify-content: space-between; padding-bottom: 2rem; }
+.eyebrow { color: #b8251c; font-size: 0.72rem; font-weight: 800; letter-spacing: 0; margin: 0 0 0.6rem; }
+h1, h2 { color: #17242d; letter-spacing: 0; }
+h1 { font-size: 2.4rem; margin: 0; }
+.dashboard-heading p:not(.eyebrow) { color: #687780; margin-bottom: 0; }
+.role-badge { border: 1px solid #8ba1ad; color: #455964; font-size: 0.74rem; font-weight: 800; padding: 0.42rem 0.55rem; }
+.role-badge.admin { background: #d7483d; border-color: #d7483d; color: #ffffff; }
+.permission-message { background: #e8f1f3; border-left: 4px solid #2d7183; margin: 2rem 0; padding: 1.3rem 1.5rem; }
+.permission-message.admin-message { background: #fdf1d1; border-left-color: #d99d18; }
+.permission-message h2 { font-size: 1rem; margin: 0 0 0.4rem; }
+.permission-message p { color: #53636c; line-height: 1.5; margin: 0; }
+.module-grid { display: grid; gap: 1rem; grid-template-columns: repeat(3, 1fr); }
+article { background: #ffffff; border: 1px solid #dbe1e5; min-height: 190px; padding: 1.35rem; }
+.module-index { color: #d7483d; font-size: 0.76rem; font-weight: 800; }
+article h2 { font-size: 1.15rem; margin: 2.3rem 0 0.4rem; }
+article p { color: #65737c; font-size: 0.9rem; line-height: 1.45; margin: 0; }
+article > span:last-child { color: #84929a; display: block; font-size: 0.72rem; font-weight: 700; margin-top: 1.8rem; text-transform: uppercase; }
+@media (max-width: 700px) { .dashboard { padding: 2.5rem 1.25rem; } .module-grid { grid-template-columns: 1fr; } .dashboard-heading { gap: 1rem; } h1 { font-size: 2rem; } }

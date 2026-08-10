@@ -1,0 +1,43 @@
+<section class="dashboard">
+  <div class="dashboard-heading">
+    <div>
+      <p class="eyebrow">PANEL DE TORNEOS</p>
+      <h1>Hola, {{ auth.user()?.nombre }}</h1>
+      <p>Sesion activa como <strong>{{ auth.isAdmin() ? 'administrador' : 'usuario de consulta' }}</strong>.</p>
+    </div>
+    <span class="role-badge" [class.admin]="auth.isAdmin()">{{ auth.user()?.rol }}</span>
+  </div>
+
+  @if (auth.isAdmin()) {
+    <section class="permission-message admin-message">
+      <h2>Acceso de administracion habilitado</h2>
+      <p>Podras crear torneos, registrar equipos y actualizar partidos y resultados. Los siguientes modulos se conectaran a estos permisos.</p>
+    </section>
+  } @else {
+    <section class="permission-message">
+      <h2>Acceso de consulta habilitado</h2>
+      <p>Puedes revisar la informacion de los torneos. Las acciones de creacion, edicion y eliminacion quedan reservadas para administradores.</p>
+    </section>
+  }
+
+  <section class="module-grid" aria-label="Modulos disponibles">
+    <article>
+      <span class="module-index">01</span>
+      <h2>Torneos</h2>
+      <p>Deporte, formato, fechas y estado de cada competencia.</p>
+      <span>Proximamente</span>
+    </article>
+    <article>
+      <span class="module-index">02</span>
+      <h2>Equipos</h2>
+      <p>Participantes y grupos de cada torneo.</p>
+      <span>Proximamente</span>
+    </article>
+    <article>
+      <span class="module-index">03</span>
+      <h2>Partidos</h2>
+      <p>Calendario, rondas, estados y carga de resultados.</p>
+      <span>Proximamente</span>
+    </article>
+  </section>
+</section>

@@ -1,0 +1,68 @@
+{
+  "info": {
+    "name": "Torneos API REST con JWT",
+    "description": "Pruebas de autenticacion, autorizacion, torneos, equipos, partidos y validaciones.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000" },
+    { "key": "token_admin", "value": "" },
+    { "key": "token_consulta", "value": "" },
+    { "key": "torneo_id", "value": "" },
+    { "key": "equipo_local_id", "value": "" },
+    { "key": "equipo_visitante_id", "value": "" },
+    { "key": "partido_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth - registrar primer ADMIN",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('201 Created', () => pm.response.to.have.status(201));", "pm.collectionVariables.set('token_admin', pm.response.json().token);"] } }],
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{base_url}}/api/auth/register", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Administrador\",\n  \"email\": \"admin@torneos.test\",\n  \"password\": \"Admin1234\",\n  \"rol\": \"ADMIN\"\n}" } }
+    },
+    {
+      "name": "Auth - login ADMIN",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));", "pm.collectionVariables.set('token_admin', pm.response.json().token);"] } }],
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{base_url}}/api/auth/login", "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@torneos.test\",\n  \"password\": \"Admin1234\"\n}" } }
+    },
+    {
+      "name": "Torneos - crear torneo",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('201 Created', () => pm.response.to.have.status(201));", "pm.collectionVariables.set('torneo_id', pm.response.json().data.id);"] } }],
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_admin}}" }], "url": "{{base_url}}/api/torneos", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Copa de la Ciudad\",\n  \"deporte\": \"Futbol\",\n  \"formato\": \"LIGA\",\n  \"fecha_inicio\": \"2026-09-01\",\n  \"estado\": \"BORRADOR\"\n}" } }
+    },
+    {
+      "name": "Equipos - crear local",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('201 Created', () => pm.response.to.have.status(201));", "pm.collectionVariables.set('equipo_local_id', pm.response.json().data.id);"] } }],
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_admin}}" }], "url": "{{base_url}}/api/torneos/{{torneo_id}}/equipos", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Equipo Azul\",\n  \"grupo\": \"A\"\n}" } }
+    },
+    {
+      "name": "Equipos - crear visitante",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('201 Created', () => pm.response.to.have.status(201));", "pm.collectionVariables.set('equipo_visitante_id', pm.response.json().data.id);"] } }],
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_admin}}" }], "url": "{{base_url}}/api/torneos/{{torneo_id}}/equipos", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Equipo Rojo\",\n  \"grupo\": \"A\"\n}" } }
+    },
+    {
+      "name": "Partidos - programar partido",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('201 Created', () => pm.response.to.have.status(201));", "pm.collectionVariables.set('partido_id', pm.response.json().data.id);"] } }],
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_admin}}" }], "url": "{{base_url}}/api/torneos/{{torneo_id}}/partidos", "body": { "mode": "raw", "raw": "{\n  \"equipo_local_id\": {{equipo_local_id}},\n  \"equipo_visitante_id\": {{equipo_visitante_id}},\n  \"fecha\": \"2026-09-04T18:00:00Z\",\n  \"sede\": \"Cancha Central\",\n  \"ronda\": \"Grupo A\",\n  \"estado\": \"PROGRAMADO\"\n}" } }
+    },
+    {
+      "name": "Partidos - registrar resultado",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));", "pm.test('estado FINALIZADO', () => pm.expect(pm.response.json().data.estado).to.eql('FINALIZADO'));"] } }],
+      "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_admin}}" }], "url": "{{base_url}}/api/partidos/{{partido_id}}/resultado", "body": { "mode": "raw", "raw": "{\n  \"marcador_local\": 3,\n  \"marcador_visitante\": 1\n}" } }
+    },
+    {
+      "name": "Auth - registrar CONSULTA",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('201 Created', () => pm.response.to.have.status(201));", "pm.collectionVariables.set('token_consulta', pm.response.json().token);"] } }],
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "url": "{{base_url}}/api/auth/register", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Usuario Consulta\",\n  \"email\": \"consulta@torneos.test\",\n  \"password\": \"Consulta123\"\n}" } }
+    },
+    {
+      "name": "CONSULTA - puede listar torneos",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] } }],
+      "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token_consulta}}" }], "url": "{{base_url}}/api/torneos" }
+    },
+    {
+      "name": "CONSULTA - crear torneo devuelve 403",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('403 Forbidden', () => pm.response.to.have.status(403));"] } }],
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token_consulta}}" }], "url": "{{base_url}}/api/torneos", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Sin permiso\",\n  \"deporte\": \"Baloncesto\",\n  \"formato\": \"LIGA\",\n  \"fecha_inicio\": \"2026-10-01\"\n}" } }
+    }
+  ]
+}

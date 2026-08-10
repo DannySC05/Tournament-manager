@@ -1,0 +1,29 @@
+<div class="application-shell">
+  @if (!isAuthScreen()) {
+  <header class="topbar">
+    <a class="brand" routerLink="/panel" aria-label="Torneos, ir al panel">
+      <span class="brand-mark">T</span>
+      <span>Administra <strong>torneos</strong></span>
+    </a>
+
+    @if (auth.user(); as user) {
+      <nav aria-label="Navegacion principal">
+        <a routerLink="/panel" routerLinkActive="active">Panel</a>
+      </nav>
+      <div class="user-actions">
+        <div class="user-summary">
+          <span>{{ user.nombre }}</span>
+          <small>{{ user.rol === 'ADMIN' ? 'Administrador' : 'Consulta' }}</small>
+        </div>
+        <button type="button" class="icon-button" aria-label="Cerrar sesion" title="Cerrar sesion" (click)="logout()">
+          <span aria-hidden="true">&#x2192;</span>
+        </button>
+      </div>
+    }
+  </header>
+  }
+
+  <main>
+    <router-outlet />
+  </main>
+</div>

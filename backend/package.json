@@ -1,7 +1,7 @@
 {
-  "name": "mundial-api-jwt",
+  "name": "torneos-api-jwt",
   "version": "1.0.0",
-  "description": "API REST para gestion del Mundial con JWT, roles, reglas de negocio y SQLite.",
+  "description": "API REST para administrar torneos con JWT, roles, reglas de negocio y SQLite.",
   "type": "module",
   "scripts": {
     "start": "node --no-warnings src/server.mjs",
