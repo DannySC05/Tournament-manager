@@ -1,0 +1,31 @@
+> Building...
+√ Building...
+Initial chunk files | Names         |  Raw size
+main.js             | main          | 147.70 kB | 
+styles.css          | styles        | 404 bytes | 
+
+                    | Initial total | 148.10 kB
+
+Application bundle generation complete. [3.196 seconds] - 2026-08-10T20:54:49.839Z
+
+Watch mode enabled. Watching for file changes...
+NOTE: Raw file sizes do not reflect development server per-request transformations.
+[2m3:54:50 p.m.[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m Re-optimizing dependencies because lockfile has changed
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://127.0.0.1:[1m4200[22m/[39m
+[2m3:54:51 p.m.[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [optimizer] bundling dependencies...
+> Changes detected. Rebuilding...
+√ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 147.57 kB | 
+
+Application bundle generation complete. [0.750 seconds] - 2026-08-10T20:55:55.832Z
+
+Page reload sent to client(s).
+> Changes detected. Rebuilding...
+√ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 147.70 kB | 
+
+Application bundle generation complete. [0.165 seconds] - 2026-08-10T20:57:35.384Z
+
+Page reload sent to client(s).
