@@ -1,43 +1,81 @@
-<section class="dashboard">
-  <div class="dashboard-heading">
-    <div>
-      <p class="eyebrow">PANEL DE TORNEOS</p>
-      <h1>Hola, {{ auth.user()?.nombre }}</h1>
-      <p>Sesion activa como <strong>{{ auth.isAdmin() ? 'administrador' : 'usuario de consulta' }}</strong>.</p>
-    </div>
-    <span class="role-badge" [class.admin]="auth.isAdmin()">{{ auth.user()?.rol }}</span>
-  </div>
-
-  @if (auth.isAdmin()) {
-    <section class="permission-message admin-message">
-      <h2>Acceso de administracion habilitado</h2>
-      <p>Podras crear torneos, registrar equipos y actualizar partidos y resultados. Los siguientes modulos se conectaran a estos permisos.</p>
-    </section>
-  } @else {
-    <section class="permission-message">
-      <h2>Acceso de consulta habilitado</h2>
-      <p>Puedes revisar la informacion de los torneos. Las acciones de creacion, edicion y eliminacion quedan reservadas para administradores.</p>
-    </section>
+<div class="dashboard-shell">
+  <app-dashboard-sidebar [open]="menuOpen()" (logout)="auth.logout()" />
+  @if (menuOpen()) {
+    <button class="menu-backdrop" type="button" aria-label="Cerrar menu" (click)="closeMenu()"></button>
   }
 
-  <section class="module-grid" aria-label="Modulos disponibles">
-    <article>
-      <span class="module-index">01</span>
-      <h2>Torneos</h2>
-      <p>Deporte, formato, fechas y estado de cada competencia.</p>
-      <span>Proximamente</span>
-    </article>
-    <article>
-      <span class="module-index">02</span>
-      <h2>Equipos</h2>
-      <p>Participantes y grupos de cada torneo.</p>
-      <span>Proximamente</span>
-    </article>
-    <article>
-      <span class="module-index">03</span>
-      <h2>Partidos</h2>
-      <p>Calendario, rondas, estados y carga de resultados.</p>
-      <span>Proximamente</span>
-    </article>
-  </section>
-</section>
+  <div class="dashboard-workspace">
+    @if (currentTournament(); as tournament) {
+      <app-dashboard-topbar
+        [tournamentName]="tournament.nombre"
+        [userName]="auth.user()?.nombre ?? 'Usuario'"
+        [role]="auth.user()?.rol ?? 'CONSULTA'"
+        [menuOpen]="menuOpen()"
+        (menuToggle)="toggleMenu()" />
+
+      <main class="dashboard-content">
+        <section class="tournament-header" aria-labelledby="tournament-title">
+          <div>
+            <p class="section-kicker">TORNEO ACTUAL</p>
+            <div class="title-row"><h1 id="tournament-title">{{ tournament.nombre }}</h1><app-status-badge [status]="tournament.estado" [label]="formatTournamentStatus(tournament.estado)" /></div>
+            <p class="tournament-meta">{{ tournament.deporte }} <span aria-hidden="true">·</span> {{ tournament.formato | titlecase }}</p>
+            <p class="date-range">{{ dateRange() }}</p>
+          </div>
+          @if (auth.isAdmin()) {
+            <div class="admin-actions">
+              <button class="button secondary" type="button" (click)="openModule('equipos')"><span aria-hidden="true">+</span> Agregar equipo</button>
+              <button class="button primary" type="button" (click)="openModule('partidos')"><span aria-hidden="true">+</span> Programar partido</button>
+            </div>
+          }
+        </section>
+
+        <section class="stats-grid" aria-label="Resumen del torneo">
+          @for (stat of stats(); track stat.label) {
+            <app-stat-card [icon]="stat.icon" [value]="stat.value" [label]="stat.label" />
+          }
+        </section>
+
+        @if (nextMatch(); as match) {
+          <section class="next-match-card" aria-labelledby="next-match-title">
+            <div class="next-match-head"><p id="next-match-title">PRÓXIMO PARTIDO</p><app-status-badge [status]="match.estado" [label]="formatMatchStatus(match.estado)" /></div>
+            <div class="teams-line"><strong>{{ match.equipo_local }}</strong><span>VS</span><strong>{{ match.equipo_visitante }}</strong></div>
+            <div class="match-details"><span>{{ matchDay(match.fecha) }} <b aria-hidden="true">·</b> {{ matchTime(match.fecha) }}</span><span>{{ match.sede }}</span></div>
+            <button class="detail-link prominent" type="button" (click)="openModule('partidos')">Ver partido <span aria-hidden="true">→</span></button>
+          </section>
+        }
+
+        <section class="summary-grid">
+          <article class="content-card upcoming-card">
+            <div class="card-heading"><h2>Próximos partidos</h2><button class="detail-link" type="button" (click)="openModule('partidos')">Ver calendario <span aria-hidden="true">→</span></button></div>
+            <div class="match-list">
+              @for (match of upcomingMatches(); track trackByMatch($index, match)) {
+                <div class="match-row"><span class="match-date">{{ matchDay(match.fecha) }}</span><span class="match-time">{{ matchTime(match.fecha) }}</span><span class="match-teams">{{ match.equipo_local }} <b>vs</b> {{ match.equipo_visitante }}</span><app-status-badge [status]="match.estado" [label]="formatMatchStatus(match.estado)" /></div>
+              } @empty { <p class="empty-copy">No hay partidos pendientes.</p> }
+            </div>
+          </article>
+
+          <article class="content-card results-card">
+            <div class="card-heading"><h2>Resultados recientes</h2><button class="detail-link" type="button" (click)="openModule('resultados')">Ver resultados <span aria-hidden="true">→</span></button></div>
+            <div class="result-list">
+              @for (match of recentMatches(); track trackByMatch($index, match)) {
+                <div class="result-row"><span>{{ match.equipo_local }}</span><strong>{{ match.marcador_local }} - {{ match.marcador_visitante }}</strong><span>{{ match.equipo_visitante }}</span><app-status-badge [status]="match.estado" [label]="formatMatchStatus(match.estado)" /></div>
+              } @empty { <p class="empty-copy">Aún no hay resultados.</p> }
+            </div>
+          </article>
+
+          <article class="content-card teams-card">
+            <div class="card-heading"><h2>Equipos</h2><button class="detail-link" type="button" (click)="openModule('equipos')">Ver todos <span aria-hidden="true">→</span></button></div>
+            <div class="team-list">
+              @for (team of teams().slice(0, 4); track team.id) {
+                <div class="team-row"><span class="team-code">{{ teamCode(team.nombre) }}</span><span>{{ team.nombre }}</span></div>
+              } @empty { <p class="empty-copy">Aún no hay equipos.</p> }
+            </div>
+            @if (teams().length > 4) { <button class="more-teams" type="button" (click)="openModule('equipos')">+{{ teams().length - 4 }} equipos</button> }
+          </article>
+        </section>
+      </main>
+    } @else if (loading()) {
+      <main class="loading-state"><span></span> Cargando resumen del torneo...</main>
+    }
+  </div>
+</div>

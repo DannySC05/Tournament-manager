@@ -23,3 +23,26 @@
 ## Final result
 
 passed
+
+---
+
+# Design QA - Dashboard de inicio
+
+## Alcance verificado
+
+- Implementacion: `http://localhost:4200/panel`.
+- El dashboard usa layout interno de sidebar, barra superior y contenido de trabajo; no reutiliza el estadio, jugador ni composicion promocional del acceso.
+- Los datos se solicitan con los endpoints existentes de torneos, equipos y partidos. Cuando una base nueva aun no contiene torneos, se usa una vista de muestra local para conservar una primera experiencia completa.
+- Los botones de navegacion llevan a rutas de modulo independientes preparadas, sin incluir CRUD dentro de Inicio.
+- El rol `ADMIN` muestra las acciones de agregar equipo y programar partido. El rol `CONSULTA` no las renderiza.
+- El layout adapta la sidebar a iconos en tableta y a menu lateral en movil; las metricas pasan de cuatro a dos columnas y las secciones se apilan.
+
+## Verificaciones
+
+- `npm.cmd run build` finalizo correctamente despues de los cambios del dashboard.
+- La guardia JWT de `/panel` permanece activa y redirige a `/acceso` cuando no existe sesion.
+- La inspeccion visual automatizada del panel no se forzo con usuarios de prueba ni cambios de seguridad; requiere una sesion real en el navegador para su captura final.
+
+## Final result
+
+passed (build and route protection); visual session check pending normal login
