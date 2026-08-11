@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, forkJoin, map, Observable, of, switchMap } from 'rxjs';
 
+import { TournamentService } from '../../core/tournaments/tournament.service';
 import { DashboardData, Match, Team, Tournament } from './dashboard.models';
 
 interface ApiResponse<T> {
@@ -12,10 +13,10 @@ interface ApiResponse<T> {
 export class DashboardService {
   private readonly apiUrl = 'http://localhost:3000/api';
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(private readonly http: HttpClient, private readonly tournamentsApi: TournamentService) {}
 
   loadOverview(): Observable<DashboardData> {
-    return this.http.get<ApiResponse<Tournament[]>>(`${this.apiUrl}/torneos`).pipe(
+    return this.tournamentsApi.list().pipe(
       switchMap(({ data }) => {
         const tournament = data[0];
         if (!tournament) return of(this.previewData());

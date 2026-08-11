@@ -1,0 +1,51 @@
+<div class="teams-shell">
+  <app-dashboard-sidebar [open]="menuOpen()" (logout)="auth.logout()" />
+  @if (menuOpen()) { <button class="menu-backdrop" type="button" aria-label="Cerrar menú" (click)="closeMenu()"></button> }
+
+  <div class="teams-workspace">
+    <app-dashboard-topbar
+      [tournamentName]="selectedTournament()?.nombre ?? 'Equipos'"
+      [userName]="auth.user()?.nombre ?? 'Usuario'"
+      [role]="auth.user()?.rol ?? 'CONSULTA'"
+      [menuOpen]="menuOpen()"
+      (menuToggle)="toggleMenu()" />
+
+    <main class="teams-content">
+      <section class="page-header">
+        <div><p class="section-kicker">ADMINISTRACIÓN</p><h1>Equipos</h1><p>Registra y organiza los participantes de cada torneo.</p></div>
+        @if (auth.isAdmin() && selectedTournament()) { <button class="create-button" type="button" (click)="openCreate()"><svg lucidePlus width="18" height="18" /> Agregar equipo</button> }
+      </section>
+
+      @if (error()) { <p class="feedback error" role="alert">{{ error() }}</p> }
+
+      @if (loadingTournaments()) {
+        <section class="teams-card loading-state"><span></span> Cargando torneos...</section>
+      } @else if (!tournaments().length) {
+        <section class="teams-card empty-state"><span class="empty-icon"><svg lucideUsersRound width="24" height="24" /></span><h2>Primero crea un torneo</h2><p>Los equipos siempre pertenecen a un torneo. Crea uno para comenzar a registrar participantes.</p>@if (auth.isAdmin()) { <button class="text-button" type="button" (click)="openTournaments()">Ir a Torneos</button> }</section>
+      } @else {
+        <section class="selector-card"><div><span class="selector-label">TORNEO SELECCIONADO</span><strong>{{ selectedTournament()?.nombre }}</strong><small>{{ selectedTournament()?.deporte }} · {{ selectedTournament()?.formato }}</small></div><label class="tournament-select"><span>Ver torneo</span><select [value]="selectedTournamentId()" (change)="changeTournament($any($event.target).value)">@for (tournament of tournaments(); track tournament.id) { <option [value]="tournament.id">{{ tournament.nombre }}</option> }</select></label></section>
+
+        <section class="teams-card" aria-labelledby="teams-list-title">
+          <div class="list-toolbar"><div><h2 id="teams-list-title">Participantes</h2><span>{{ teams().length }} equipos registrados</span></div><label class="search"><svg lucideSearch width="17" height="17" /><input type="search" placeholder="Buscar equipo" [value]="query()" (input)="setQuery($any($event.target).value)" /></label></div>
+          @if (loadingTeams()) {
+            <div class="loading-state"><span></span> Cargando equipos...</div>
+          } @else if (!visibleTeams().length && !teams().length) {
+            <div class="empty-state"><span class="empty-icon"><svg lucideUsersRound width="24" height="24" /></span><h2>Aún no hay equipos</h2><p>Agrega los participantes de {{ selectedTournament()?.nombre }} para programar sus partidos.</p>@if (auth.isAdmin()) { <button class="text-button" type="button" (click)="openCreate()">Agregar el primer equipo</button> }</div>
+          } @else if (!visibleTeams().length) {
+            <div class="empty-state compact"><h2>Sin coincidencias</h2><p>Prueba con otro nombre o grupo.</p></div>
+          } @else {
+            <div class="table-wrap"><table><thead><tr><th>Equipo</th><th>Grupo</th><th>Creado para</th>@if (auth.isAdmin()) { <th><span class="visually-hidden">Acciones</span></th> }</tr></thead><tbody>@for (team of visibleTeams(); track team.id) { <tr><td><span class="team-mark">{{ team.nombre.slice(0, 1).toUpperCase() }}</span><strong>{{ team.nombre }}</strong></td><td>{{ team.grupo || 'Sin grupo' }}</td><td>{{ selectedTournament()?.nombre }}</td>@if (auth.isAdmin()) { <td class="row-actions"><button type="button" title="Editar equipo" aria-label="Editar {{ team.nombre }}" (click)="openEdit(team)"><svg lucidePencil width="16" height="16" /></button><button class="delete" type="button" title="Eliminar equipo" aria-label="Eliminar {{ team.nombre }}" (click)="confirmDelete(team)"><svg lucideTrash2 width="16" height="16" /></button></td> }</tr> }</tbody></table></div>
+          }
+        </section>
+      }
+    </main>
+  </div>
+</div>
+
+@if (formOpen()) {
+  <div class="modal-layer" role="presentation"><section class="form-dialog" role="dialog" aria-modal="true" aria-labelledby="form-title"><div class="dialog-header"><div><p class="section-kicker">{{ editing() ? 'EDICIÓN' : 'NUEVO EQUIPO' }}</p><h2 id="form-title">{{ editing() ? 'Editar equipo' : 'Agregar equipo' }}</h2></div><button type="button" class="close-button" aria-label="Cerrar formulario" (click)="closeForm()"><svg lucideX width="20" height="20" /></button></div><form [formGroup]="form" (ngSubmit)="submit()"><label>Nombre del equipo<input type="text" formControlName="nombre" placeholder="Ej. Deportivo Central" /></label>@if (form.controls.nombre.touched && form.controls.nombre.invalid) { <small class="field-error">Ingresa un nombre de al menos 2 caracteres.</small> }<label>Grupo <span class="optional">opcional</span><input type="text" formControlName="grupo" placeholder="Ej. Grupo A" /></label>@if (form.controls.grupo.touched && form.controls.grupo.invalid) { <small class="field-error">El grupo puede tener hasta 30 caracteres.</small> }<p class="form-note">Se agregará a <strong>{{ selectedTournament()?.nombre }}</strong>.</p>@if (formError()) { <p class="feedback error" role="alert">{{ formError() }}</p> }<div class="dialog-actions"><button type="button" class="cancel-button" (click)="closeForm()">Cancelar</button><button type="submit" class="save-button" [disabled]="saving()">{{ saving() ? 'Guardando...' : editing() ? 'Guardar cambios' : 'Agregar equipo' }}</button></div></form></section></div>
+}
+
+@if (deletingTeam(); as team) {
+  <div class="modal-layer" role="presentation"><section class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-title"><p class="section-kicker">ACCIÓN IRREVERSIBLE</p><h2 id="delete-title">¿Eliminar {{ team.nombre }}?</h2><p>Un equipo con partidos asociados no puede eliminarse hasta que sus partidos se retiren.</p><div class="dialog-actions"><button type="button" class="cancel-button" (click)="cancelDelete()">Cancelar</button><button type="button" class="delete-button" [disabled]="deleting()" (click)="deleteTeam()">{{ deleting() ? 'Eliminando...' : 'Eliminar equipo' }}</button></div></section></div>
+}

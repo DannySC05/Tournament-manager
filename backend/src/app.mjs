@@ -3,6 +3,7 @@ import { getDb, rowToUser } from "./db.mjs";
 import { HttpError, assertValid } from "./errors.mjs";
 import { ROLES } from "./config.mjs";
 import { hashPassword, signJwt, verifyJwt, verifyPassword } from "./security.mjs";
+import { buildStandings } from "./standings.mjs";
 import { validateEquipoInput, validatePartidoInput, validateTorneoInput, validateUserInput } from "./validators.mjs";
 
 function json(res, status, payload) {
@@ -189,6 +190,13 @@ function makeRoutes() {
       const torneoId = parseId(match[1], "torneo_id");
       ensureTorneo(db, torneoId);
       return [200, { data: db.prepare("SELECT * FROM equipos WHERE torneo_id = ? ORDER BY grupo, nombre").all(torneoId) }];
+    }),
+    route("GET", /^\/api\/torneos\/(\d+)\/clasificacion$/, ({ db, match }) => {
+      const torneoId = parseId(match[1], "torneo_id");
+      ensureTorneo(db, torneoId);
+      const teams = db.prepare("SELECT * FROM equipos WHERE torneo_id = ? ORDER BY grupo, nombre").all(torneoId);
+      const matches = db.prepare("SELECT * FROM partidos WHERE torneo_id = ? AND estado = 'FINALIZADO'").all(torneoId);
+      return [200, { data: { grupos: buildStandings(teams, matches) } }];
     }),
     route("POST", /^\/api\/torneos\/(\d+)\/equipos$/, ({ db, body, match, user }) => {
       requireAdmin(user);
