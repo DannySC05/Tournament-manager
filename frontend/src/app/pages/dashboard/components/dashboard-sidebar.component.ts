@@ -1,10 +1,10 @@
 import { Component, input, output } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { LucideCalendarDays, LucideHome, LucideLogOut, LucideMedal, LucideSettings, LucideTrophy, LucideUsersRound } from '@lucide/angular';
+import { LucideCalendarDays, LucideHome, LucideLogOut, LucideMedal, LucideSettings, LucideTable2, LucideTrophy, LucideUsersRound } from '@lucide/angular';
 
 @Component({
   selector: 'app-dashboard-sidebar',
-  imports: [RouterLink, RouterLinkActive, LucideCalendarDays, LucideHome, LucideLogOut, LucideMedal, LucideSettings, LucideTrophy, LucideUsersRound],
+  imports: [RouterLink, RouterLinkActive, LucideCalendarDays, LucideHome, LucideLogOut, LucideMedal, LucideSettings, LucideTable2, LucideTrophy, LucideUsersRound],
   template: `
     <aside class="sidebar" [class.open]="open()">
       <a class="brand" routerLink="/panel"><span class="brand-mark"><svg lucideTrophy width="18" height="18" /></span><span class="brand-copy">Administra <strong>torneos</strong></span></a>
@@ -14,6 +14,7 @@ import { LucideCalendarDays, LucideHome, LucideLogOut, LucideMedal, LucideSettin
         <a routerLink="/modulos/equipos" routerLinkActive="active"><svg lucideUsersRound width="19" height="19" /><span>Equipos</span></a>
         <a routerLink="/modulos/partidos" routerLinkActive="active"><svg lucideCalendarDays width="19" height="19" /><span>Partidos</span></a>
         <a routerLink="/modulos/resultados" routerLinkActive="active"><svg lucideMedal width="19" height="19" /><span>Resultados</span></a>
+        <a routerLink="/modulos/clasificacion" routerLinkActive="active"><svg lucideTable2 width="19" height="19" /><span>Clasificación</span></a>
       </nav>
       <div class="sidebar-footer">
         <a routerLink="/modulos/configuracion"><svg lucideSettings width="19" height="19" /><span>Configuracion</span></a>
