@@ -1,0 +1,55 @@
+<div class="matches-shell">
+  <app-dashboard-sidebar [open]="menuOpen()" (logout)="auth.logout()" />
+  @if (menuOpen()) { <button class="menu-backdrop" type="button" aria-label="Cerrar menú" (click)="closeMenu()"></button> }
+
+  <div class="matches-workspace">
+    <app-dashboard-topbar
+      [tournamentName]="selectedTournament()?.nombre ?? 'Partidos'"
+      [userName]="auth.user()?.nombre ?? 'Usuario'"
+      [role]="auth.user()?.rol ?? 'CONSULTA'"
+      [menuOpen]="menuOpen()"
+      (menuToggle)="toggleMenu()" />
+
+    <main class="matches-content">
+      <section class="page-header">
+        <div><p class="section-kicker">ADMINISTRACIÓN</p><h1>Partidos</h1><p>Programa encuentros y consulta el calendario del torneo.</p></div>
+        @if (auth.isAdmin() && selectedTournament() && canSchedule()) { <button class="create-button" type="button" (click)="openCreate()"><svg lucidePlus width="18" height="18" /> Programar partido</button> }
+      </section>
+
+      @if (error()) { <p class="feedback error" role="alert">{{ error() }}</p> }
+
+      @if (loadingTournaments()) {
+        <section class="matches-card loading-state"><span></span> Cargando torneos...</section>
+      } @else if (!tournaments().length) {
+        <section class="matches-card empty-state"><span class="empty-icon"><svg lucideCalendarDays width="24" height="24" /></span><h2>Primero crea un torneo</h2><p>Los partidos se programan dentro de una competencia existente.</p>@if (auth.isAdmin()) { <button class="text-button" type="button" (click)="openTournaments()">Ir a Torneos</button> }</section>
+      } @else {
+        <section class="selector-card"><div><span class="selector-label">TORNEO SELECCIONADO</span><strong>{{ selectedTournament()?.nombre }}</strong><small>{{ teams().length }} equipos disponibles para programar</small></div><label class="tournament-select"><span>Ver torneo</span><select [value]="selectedTournamentId()" (change)="changeTournament($any($event.target).value)">@for (tournament of tournaments(); track tournament.id) { <option [value]="tournament.id">{{ tournament.nombre }}</option> }</select></label></section>
+
+        @if (!loadingData() && !canSchedule()) {
+          <p class="guidance">Necesitas al menos dos equipos en este torneo para programar un partido. @if (auth.isAdmin()) { <button type="button" (click)="openTeams()">Gestionar equipos</button> }</p>
+        }
+
+        <section class="matches-card" aria-labelledby="matches-list-title">
+          <div class="list-toolbar"><div><h2 id="matches-list-title">Calendario</h2><span>{{ matches().length }} partidos registrados</span></div><div class="filters"><label class="search"><svg lucideSearch width="17" height="17" /><input type="search" placeholder="Buscar partido" [value]="query()" (input)="setQuery($any($event.target).value)" /></label><label class="filter-select"><svg lucideSlidersHorizontal width="16" height="16" /><select [value]="statusFilter()" (change)="setStatus($any($event.target).value)"><option value="TODOS">Todos los estados</option><option value="PROGRAMADO">Programados</option><option value="EN_JUEGO">En juego</option><option value="FINALIZADO">Finalizados</option></select></label><input class="date-filter" type="date" aria-label="Filtrar por fecha" [value]="dateFilter()" (change)="setDate($any($event.target).value)" /></div></div>
+          @if (loadingData()) {
+            <div class="loading-state"><span></span> Cargando calendario...</div>
+          } @else if (!visibleMatches().length && !matches().length) {
+            <div class="empty-state"><span class="empty-icon"><svg lucideCalendarDays width="24" height="24" /></span><h2>Aún no hay partidos</h2><p>Programa el primer encuentro cuando este torneo tenga al menos dos equipos.</p>@if (auth.isAdmin() && canSchedule()) { <button class="text-button" type="button" (click)="openCreate()">Programar el primer partido</button> }</div>
+          } @else if (!visibleMatches().length) {
+            <div class="empty-state compact"><h2>Sin coincidencias</h2><p>Ajusta la búsqueda o los filtros del calendario.</p><button class="text-button" type="button" (click)="clearFilters()">Limpiar filtros</button></div>
+          } @else {
+            <div class="table-wrap"><table><thead><tr><th>Fecha y hora</th><th>Encuentro</th><th>Ronda</th><th>Sede</th><th>Estado / resultado</th>@if (auth.isAdmin()) { <th><span class="visually-hidden">Acciones</span></th> }</tr></thead><tbody>@for (match of visibleMatches(); track match.id) { <tr><td>{{ formatDateTime(match.fecha) }}</td><td><strong>{{ match.equipo_local }}</strong><span class="versus">vs</span><strong>{{ match.equipo_visitante }}</strong></td><td>{{ match.ronda }}</td><td>{{ match.sede }}</td><td><app-status-badge [status]="match.estado" [label]="formatStatus(match.estado)" />@if (match.estado === 'FINALIZADO') { <small class="score">{{ score(match) }}</small> }</td>@if (auth.isAdmin()) { <td class="row-actions">@if (match.estado !== 'FINALIZADO') { <button type="button" title="Editar partido" aria-label="Editar partido entre {{ match.equipo_local }} y {{ match.equipo_visitante }}" (click)="openEdit(match)"><svg lucidePencil width="16" height="16" /></button> }<button class="delete" type="button" title="Eliminar partido" aria-label="Eliminar partido entre {{ match.equipo_local }} y {{ match.equipo_visitante }}" (click)="confirmDelete(match)"><svg lucideTrash2 width="16" height="16" /></button></td> }</tr> }</tbody></table></div>
+          }
+        </section>
+      }
+    </main>
+  </div>
+</div>
+
+@if (formOpen()) {
+  <div class="modal-layer" role="presentation"><section class="form-dialog" role="dialog" aria-modal="true" aria-labelledby="form-title"><div class="dialog-header"><div><p class="section-kicker">{{ editing() ? 'REPROGRAMAR PARTIDO' : 'NUEVO PARTIDO' }}</p><h2 id="form-title">{{ editing() ? 'Editar partido' : 'Programar partido' }}</h2></div><button type="button" class="close-button" aria-label="Cerrar formulario" (click)="closeForm()"><svg lucideX width="20" height="20" /></button></div><form [formGroup]="form" (ngSubmit)="submit()"><div class="teams-form-grid"><label>Equipo local<select formControlName="equipo_local_id"><option [value]="0" disabled>Selecciona un equipo</option>@for (team of teams(); track team.id) { <option [value]="team.id">{{ team.nombre }}</option> }</select></label><label>Equipo visitante<select formControlName="equipo_visitante_id"><option [value]="0" disabled>Selecciona un equipo</option>@for (team of teams(); track team.id) { <option [value]="team.id">{{ team.nombre }}</option> }</select></label></div>@if ((form.controls.equipo_local_id.touched && form.controls.equipo_local_id.invalid) || (form.controls.equipo_visitante_id.touched && form.controls.equipo_visitante_id.invalid)) { <small class="field-error">Selecciona ambos equipos.</small> }<div class="form-grid"><label>Fecha y hora<input type="datetime-local" formControlName="fecha" /></label><label>Estado<select formControlName="estado"><option value="PROGRAMADO">Programado</option><option value="EN_JUEGO">En juego</option></select></label></div><div class="form-grid"><label>Sede<input type="text" formControlName="sede" placeholder="Ej. Cancha principal" /></label><label>Ronda / jornada<input type="text" formControlName="ronda" placeholder="Ej. Jornada 1" /></label></div>@if (formError()) { <p class="feedback error" role="alert">{{ formError() }}</p> }<div class="dialog-actions"><button type="button" class="cancel-button" (click)="closeForm()">Cancelar</button><button type="submit" class="save-button" [disabled]="saving()">{{ saving() ? 'Guardando...' : editing() ? 'Guardar cambios' : 'Programar partido' }}</button></div></form></section></div>
+}
+
+@if (deletingMatch(); as match) {
+  <div class="modal-layer" role="presentation"><section class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-title"><p class="section-kicker">ACCIÓN IRREVERSIBLE</p><h2 id="delete-title">¿Eliminar este partido?</h2><p>Se eliminará el encuentro entre {{ match.equipo_local }} y {{ match.equipo_visitante }}.</p><div class="dialog-actions"><button type="button" class="cancel-button" (click)="cancelDelete()">Cancelar</button><button type="button" class="delete-button" [disabled]="deleting()" (click)="deleteMatch()">{{ deleting() ? 'Eliminando...' : 'Eliminar partido' }}</button></div></section></div>
+}
