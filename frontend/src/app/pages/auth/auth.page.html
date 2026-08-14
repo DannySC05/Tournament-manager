@@ -1,33 +1,42 @@
-<section class="auth-layout">
-  <div class="scene-layer" aria-hidden="true"></div>
-  <img class="player-art" src="/assets/player-field.png" alt="" aria-hidden="true" />
+<section class="world-auth">
+  <div class="world-scene" aria-hidden="true"></div>
+  <div class="hero-trophy-stage" aria-hidden="true">
+    <img class="pedestal" src="/assets/mundial-login/pedestal-esmeralda.png" alt="" />
+    <img class="trophy" src="/assets/mundial-login/mundial-trophy.png" alt="" />
+  </div>
 
-  <section class="auth-intro" aria-label="Plataforma de torneos">
-    <h1>Crea tu<br /><span>torneo.</span></h1>
-    <p class="intro-tagline">Organiza. Compite. <strong>Celebra.</strong></p>
+  <section class="world-intro" aria-labelledby="world-title">
+    <div class="world-heading-rule" aria-hidden="true"></div>
+    <h1 id="world-title">Mundial de <span>Selecciones</span></h1>
+    <div class="world-divider" aria-hidden="true">
+      <span></span>
+      <svg lucideCircleDot></svg>
+    </div>
+    <p>
+      Plataforma global para la gestión integral<br />
+      de torneos y selecciones de todo el mundo.
+    </p>
 
-    <div class="feature-cards">
-      <article class="feature-card">
-        <svg lucideClipboardList aria-hidden="true"></svg>
-        <span>Gestión</span>
-      </article>
-      <article class="feature-card">
+    <div class="world-features" aria-label="Funciones principales">
+      <article class="world-feature">
         <svg lucideUsersRound aria-hidden="true"></svg>
-        <span>Equipos</span>
+        <h2>Selecciones</h2>
+        <p>Organiza plantillas, cuerpos técnicos e información de cada equipo.</p>
       </article>
-      <article class="feature-card">
+      <article class="world-feature">
+        <svg lucideCalendarDays aria-hidden="true"></svg>
+        <h2>Partidos</h2>
+        <p>Programa, edita y consulta cada fase de la competencia.</p>
+      </article>
+      <article class="world-feature">
         <svg lucideTrophy aria-hidden="true"></svg>
-        <span>Resultados</span>
+        <h2>Resultados</h2>
+        <p>Actualiza marcadores, tablas y estadísticas en tiempo real.</p>
       </article>
     </div>
   </section>
 
-  <section class="auth-panel" aria-labelledby="access-title">
-    <div class="crest" aria-label="Torneos">
-      <svg lucideStar class="crest-star" aria-hidden="true"></svg>
-      <svg lucideShieldCheck aria-hidden="true"></svg>
-    </div>
-
+  <section class="auth-panel" aria-label="Acceso a la plataforma">
     <nav class="auth-tabs" aria-label="Acceso">
       <a routerLink="/acceso" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Iniciar sesión</a>
       <a routerLink="/registro" routerLinkActive="active">Registrarse</a>
@@ -51,13 +60,13 @@
       }
 
       <label>
-        Correo
+        Correo electrónico
         <span class="input-wrap">
           <svg lucideMail aria-hidden="true"></svg>
-          <input type="email" formControlName="email" autocomplete="email" placeholder="tu@email.com" />
+          <input type="email" formControlName="email" autocomplete="email" placeholder="ejemplo@correo.com" />
         </span>
         @if (hasError(form.controls.email, 'required') || hasError(form.controls.email, 'email')) {
-          <span class="field-error">Ingresa un correo valido.</span>
+          <span class="field-error">Ingresa un correo válido.</span>
         }
       </label>
 
@@ -65,13 +74,13 @@
         Contraseña
         <span class="input-wrap">
           <svg lucideLockKeyhole aria-hidden="true"></svg>
-          <input [type]="passwordVisible() ? 'text' : 'password'" formControlName="password" autocomplete="current-password" placeholder="Minimo 8 caracteres" />
-          <button type="button" class="password-toggle" [attr.aria-label]="passwordVisible() ? 'Ocultar contrasena' : 'Mostrar contrasena'" (click)="togglePasswordVisibility()">
+          <input [type]="passwordVisible() ? 'text' : 'password'" formControlName="password" autocomplete="current-password" placeholder="Mínimo 8 caracteres" />
+          <button type="button" class="password-toggle" [attr.aria-label]="passwordVisible() ? 'Ocultar contraseña' : 'Mostrar contraseña'" (click)="togglePasswordVisibility()">
             @if (passwordVisible()) { <svg lucideEyeOff aria-hidden="true"></svg> } @else { <svg lucideEye aria-hidden="true"></svg> }
           </button>
         </span>
         @if (hasError(form.controls.password, 'required') || hasError(form.controls.password, 'minlength')) {
-          <span class="field-error">La contrasena debe tener minimo 8 caracteres.</span>
+          <span class="field-error">La contraseña debe tener mínimo 8 caracteres.</span>
         }
       </label>
 
@@ -88,19 +97,29 @@
       }
 
       <button class="primary-button" type="submit" [disabled]="loading()">
-        {{ loading() ? 'Procesando...' : (isRegister() ? 'Crear cuenta' : 'Iniciar sesion') }}
+        {{ loading() ? 'Procesando...' : (isRegister() ? 'Crear cuenta' : 'Iniciar sesión') }}
       </button>
     </form>
 
     @if (!isRegister()) {
-      <div class="social-separator"><span>o ingresa con</span></div>
+      <div class="social-separator"><span>o continúa con</span></div>
       <div class="social-actions" aria-label="Opciones de acceso social">
-        <button type="button" class="social-google" title="Ingresar con Google" aria-label="Ingresar con Google"></button>
-        <button type="button" class="social-facebook" title="Ingresar con Facebook" aria-label="Ingresar con Facebook"></button>
-        <button type="button" class="social-apple" title="Ingresar con Apple" aria-label="Ingresar con Apple"></button>
+        <button type="button" class="social-button" title="Ingresar con Google">
+          <img src="/assets/social/google.svg" alt="" aria-hidden="true" />
+          <span>Google</span>
+        </button>
+        <button type="button" class="social-button" title="Ingresar con Microsoft">
+          <svg lucidePanelsTopLeft aria-hidden="true"></svg>
+          <span>Microsoft</span>
+        </button>
+        <button type="button" class="social-button" title="Ingresar con Apple">
+          <img src="/assets/social/apple.svg" alt="" aria-hidden="true" />
+          <span>Apple</span>
+        </button>
       </div>
     }
 
+    <p class="terms">Al continuar, aceptas nuestros <a href="/">Términos de servicio</a><br />y <a href="/">Política de privacidad</a>.</p>
     <p class="switch-mode">
       @if (isRegister()) {
         ¿Ya tienes cuenta? <a routerLink="/acceso">Inicia sesión</a>

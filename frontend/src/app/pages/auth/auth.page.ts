@@ -3,13 +3,13 @@ import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@
 import { ActivatedRoute, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
-  LucideClipboardList,
+  LucideCalendarDays,
+  LucideCircleDot,
   LucideEye,
   LucideEyeOff,
   LucideLockKeyhole,
   LucideMail,
-  LucideShieldCheck,
-  LucideStar,
+  LucidePanelsTopLeft,
   LucideTrophy,
   LucideUsersRound
 } from '@lucide/angular';
@@ -23,13 +23,13 @@ import { UserRole } from '../../core/auth/auth.models';
     ReactiveFormsModule,
     RouterLink,
     RouterLinkActive,
-    LucideClipboardList,
+    LucideCalendarDays,
+    LucideCircleDot,
     LucideEye,
     LucideEyeOff,
     LucideLockKeyhole,
     LucideMail,
-    LucideShieldCheck,
-    LucideStar,
+    LucidePanelsTopLeft,
     LucideTrophy,
     LucideUsersRound
   ],

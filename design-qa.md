@@ -46,3 +46,25 @@ passed
 ## Final result
 
 passed (build and route protection); visual session check pending normal login
+
+---
+
+# Design QA - Acceso Mundial de Selecciones
+
+## Alcance verificado
+
+- Referencia: `C:\Users\User\AppData\Local\Temp\codex-clipboard-8d1ace51-d96a-4a77-90eb-16604ef50b6a.png`.
+- Implementación: `http://localhost:4200/acceso`.
+- Recursos: estadio global oscuro y copa integrados desde `frontend/public/assets/mundial-login`.
+- Se conservan los formularios existentes, las rutas `/acceso` y `/registro`, el selector de rol y la redirección posterior a `/panel`.
+
+## Verificaciones
+
+- Vista de escritorio comprobada: el estadio ocupa el fondo, la copa queda alineada con el césped, el título ocupa el bloque central y el panel de autenticación permanece legible con vidrio oscuro.
+- Vista móvil comprobada a `390 x 844`: las tarjetas y la copa se ocultan, el título aparece antes del formulario y no se observan solapamientos.
+- El enlace `Registrarse` navega a `/registro` y el formulario de registro conserva el selector de tipo de acceso.
+- `npx.cmd ng build --configuration production` finalizó correctamente. Persisten advertencias de presupuesto de bundle y estilos, sin errores de compilación.
+
+## Final result
+
+passed
