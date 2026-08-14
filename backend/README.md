@@ -1,15 +1,18 @@
 # Torneos API REST con JWT
 
-Backend para administrar torneos deportivos, sus equipos y sus partidos. Incluye autenticacion JWT, roles `ADMIN` y `CONSULTA`, SQLite, reglas de negocio y validaciones.
+Backend para administrar torneos deportivos, sus equipos y sus partidos. Incluye autenticacion JWT, roles `ADMIN` y `CONSULTA`, PostgreSQL, reglas de negocio y validaciones.
 
 ## Ejecucion
 
 ```powershell
 cd C:\Users\User\Documents\API_Mundial-Examen\backend
+Copy-Item .env.example .env
+# Configura DATABASE_URL y JWT_SECRET
+npm run db:migrate
 npm start
 ```
 
-La API se ejecuta en `http://localhost:3000` y crea automaticamente `database/torneos.sqlite`.
+La API se ejecuta en `http://localhost:3000`. La API usa la instancia PostgreSQL configurada mediante `DATABASE_URL`.
 
 Para verificar el backend de forma aislada:
 
@@ -38,6 +41,7 @@ El primer usuario de una base vacia puede registrarse como `ADMIN`; los siguient
 | GET, POST | `/api/torneos/{id}/equipos` | Consulta, ADMIN |
 | PUT, DELETE | `/api/equipos/{id}` | ADMIN |
 | GET, POST | `/api/torneos/{id}/partidos` | Consulta, ADMIN |
+| GET | `/api/torneos/{id}/clasificacion` | ADMIN o CONSULTA |
 | GET, PUT, DELETE | `/api/partidos/{id}` | Consulta, ADMIN |
 | PUT | `/api/partidos/{id}/resultado` | ADMIN |
 

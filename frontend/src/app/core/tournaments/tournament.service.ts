@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
+import { environment } from '../../../environments/environment';
 import { Tournament, TournamentPayload } from './tournament.models';
 
 interface ApiResponse<T> {
@@ -9,7 +10,7 @@ interface ApiResponse<T> {
 
 @Injectable({ providedIn: 'root' })
 export class TournamentService {
-  private readonly apiUrl = 'http://localhost:3000/api/torneos';
+  private readonly apiUrl = `${environment.apiBaseUrl}/torneos`;
 
   constructor(private readonly http: HttpClient) {}
 

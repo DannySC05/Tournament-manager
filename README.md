@@ -1,12 +1,12 @@
 # Plataforma de Torneos
 
-Aplicacion para administrar torneos deportivos, compuesta por una interfaz Angular y una API Node.js con SQLite y JWT.
+Aplicacion para administrar torneos deportivos, compuesta por una interfaz Angular y una API Node.js con PostgreSQL y JWT.
 
 ## Estructura
 
 - `frontend/`: interfaz Angular, pantallas, estilos y servicios HTTP.
-- `backend/`: API REST, autenticacion, reglas de negocio, base de datos, pruebas y coleccion de Postman.
-- `GUIA_EXPLICACION_MUNDIAL_API.md`: guia tecnica y de exposicion existente.
+- `backend/`: API REST, autenticacion, reglas de negocio, PostgreSQL, pruebas y coleccion de Postman.
+- `docs/DESPLIEGUE_VERCEL_SUPABASE.md`: configuracion para desplegar frontend, API serverless y Supabase.
 
 ## Iniciar el proyecto
 
@@ -17,6 +17,8 @@ Terminal para la API:
 ```powershell
 cd backend
 npm install
+Copy-Item .env.example .env
+# Completa DATABASE_URL y JWT_SECRET en .env
 npm start
 ```
 
@@ -29,5 +31,7 @@ npm start
 ```
 
 La interfaz queda disponible en `http://localhost:4200` y la API en `http://localhost:3000`.
+
+Antes del primer inicio local, aplica `database/migrations/001_init.sql` en Supabase o ejecuta `npm run db:migrate` con una `DATABASE_URL` valida.
 
 Para los detalles de endpoints y pruebas, consulta [backend/README.md](backend/README.md).

@@ -1,15 +1,23 @@
 {
   "name": "torneos-api-jwt",
   "version": "1.0.0",
-  "description": "API REST para administrar torneos con JWT, roles, reglas de negocio y SQLite.",
+  "description": "API REST para administrar torneos con JWT, roles, reglas de negocio y PostgreSQL.",
   "type": "module",
   "scripts": {
     "start": "node --no-warnings src/server.mjs",
     "dev": "node --watch --no-warnings src/server.mjs",
+    "db:migrate": "node --no-warnings scripts/migrate.mjs",
     "verify": "node --no-warnings scripts/verify.mjs"
   },
   "engines": {
-    "node": ">=23.0.0"
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "pg": "^8.23.0"
+  },
+  "devDependencies": {
+    "pg-mem": "^3.0.14"
   },
   "license": "MIT"
 }

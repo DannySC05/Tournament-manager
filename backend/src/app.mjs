@@ -42,12 +42,17 @@ function parseId(value, label = "id") {
   return id;
 }
 
-function getAuthUser(req, db) {
+function isUniqueViolation(error) {
+  return error?.code === "23505";
+}
+
+async function getAuthUser(req, db) {
   const [type, token] = (req.headers.authorization ?? "").split(" ");
   if (type !== "Bearer" || !token) throw new HttpError(401, "Token JWT requerido.");
   const payload = verifyJwt(token);
   if (!payload?.sub) throw new HttpError(401, "Token JWT invalido o expirado.");
-  const user = db.prepare("SELECT * FROM users WHERE id = ?").get(Number(payload.sub));
+  const { rows } = await db.query("SELECT * FROM users WHERE id = $1", [Number(payload.sub)]);
+  const user = rows[0];
   if (!user) throw new HttpError(401, "Usuario del token no existe.");
   return user;
 }
@@ -60,14 +65,16 @@ function buildTokenResponse(user) {
   return { token: signJwt({ sub: user.id, email: user.email, rol: user.rol }), user: rowToUser(user) };
 }
 
-function ensureTorneo(db, id) {
-  const torneo = db.prepare("SELECT * FROM torneos WHERE id = ?").get(id);
+async function ensureTorneo(db, id) {
+  const { rows } = await db.query("SELECT * FROM torneos WHERE id = $1", [id]);
+  const torneo = rows[0];
   if (!torneo) throw new HttpError(404, "Torneo no encontrado.");
   return torneo;
 }
 
-function ensureEquipo(db, id, label) {
-  const equipo = db.prepare("SELECT * FROM equipos WHERE id = ?").get(id);
+async function ensureEquipo(db, id, label) {
+  const { rows } = await db.query("SELECT * FROM equipos WHERE id = $1", [id]);
+  const equipo = rows[0];
   if (!equipo) throw new HttpError(400, `${label} no existe.`);
   return equipo;
 }
@@ -110,13 +117,16 @@ const partidoFields = `
   JOIN equipos visitante ON visitante.id = p.equipo_visitante_id
 `;
 
-function getPartido(db, id) {
-  return db.prepare(`${partidoFields} WHERE p.id = ?`).get(id);
+async function getPartido(db, id) {
+  const { rows } = await db.query(`${partidoFields} WHERE p.id = $1`, [id]);
+  return rows[0];
 }
 
-function ensureEquiposDelTorneo(db, torneoId, payload) {
-  const local = ensureEquipo(db, payload.equipo_local_id, "El equipo local");
-  const visitante = ensureEquipo(db, payload.equipo_visitante_id, "El equipo visitante");
+async function ensureEquiposDelTorneo(db, torneoId, payload) {
+  const [local, visitante] = await Promise.all([
+    ensureEquipo(db, payload.equipo_local_id, "El equipo local"),
+    ensureEquipo(db, payload.equipo_visitante_id, "El equipo visitante")
+  ]);
   if (local.torneo_id !== torneoId || visitante.torneo_id !== torneoId) {
     throw new HttpError(400, "Los equipos deben pertenecer al torneo indicado.");
   }
@@ -124,183 +134,213 @@ function ensureEquiposDelTorneo(db, torneoId, payload) {
 
 function makeRoutes() {
   return [
-    route("POST", /^\/api\/auth\/register$/, ({ db, body }) => {
+    route("POST", /^\/api\/auth\/register$/, async ({ db, body }) => {
       validateUserInput(body);
-      const total = db.prepare("SELECT COUNT(*) AS total FROM users").get().total;
-      const rol = body.rol === ROLES.ADMIN && total === 0 ? ROLES.ADMIN : ROLES.CONSULTA;
+      const { rows: totals } = await db.query("SELECT COUNT(*)::int AS total FROM users");
+      const rol = body.rol === ROLES.ADMIN && totals[0].total === 0 ? ROLES.ADMIN : ROLES.CONSULTA;
       try {
-        const result = db.prepare("INSERT INTO users (nombre, email, password_hash, rol) VALUES (?, ?, ?, ?)")
-          .run(body.nombre.trim(), body.email.trim().toLowerCase(), hashPassword(body.password), rol);
-        return [201, buildTokenResponse(db.prepare("SELECT * FROM users WHERE id = ?").get(result.lastInsertRowid))];
+        const { rows } = await db.query(
+          "INSERT INTO users (nombre, email, password_hash, rol) VALUES ($1, $2, $3, $4) RETURNING *",
+          [body.nombre.trim(), body.email.trim().toLowerCase(), hashPassword(body.password), rol]
+        );
+        return [201, buildTokenResponse(rows[0])];
       } catch (error) {
-        if (String(error.message).includes("UNIQUE")) throw new HttpError(409, "El email ya esta registrado.");
+        if (isUniqueViolation(error)) throw new HttpError(409, "El email ya esta registrado.");
         throw error;
       }
     }),
-    route("POST", /^\/api\/auth\/login$/, ({ db, body }) => {
+    route("POST", /^\/api\/auth\/login$/, async ({ db, body }) => {
       assertValid(body.email && body.password, "Email y password son obligatorios.");
-      const user = db.prepare("SELECT * FROM users WHERE email = ?").get(String(body.email).trim().toLowerCase());
+      const { rows } = await db.query("SELECT * FROM users WHERE email = $1", [String(body.email).trim().toLowerCase()]);
+      const user = rows[0];
       if (!user || !verifyPassword(String(body.password), user.password_hash)) throw new HttpError(401, "Credenciales invalidas.");
       return [200, buildTokenResponse(user)];
     }),
-    route("GET", /^\/api\/auth\/me$/, ({ user }) => [200, { user: rowToUser(user) }]),
-    route("POST", /^\/api\/auth\/logout$/, () => [200, { message: "Logout correcto. El cliente debe descartar el token JWT." }]),
+    route("GET", /^\/api\/auth\/me$/, async ({ user }) => [200, { user: rowToUser(user) }]),
+    route("POST", /^\/api\/auth\/logout$/, async () => [200, { message: "Logout correcto. El cliente debe descartar el token JWT." }]),
 
-    route("GET", /^\/api\/torneos$/, ({ db }) => [
-      200,
-      { data: db.prepare(`SELECT t.*, COUNT(e.id) AS equipos_count FROM torneos t LEFT JOIN equipos e ON e.torneo_id = t.id GROUP BY t.id ORDER BY t.fecha_inicio DESC, t.nombre`).all() }
-    ]),
-    route("POST", /^\/api\/torneos$/, ({ db, body, user }) => {
+    route("GET", /^\/api\/torneos$/, async ({ db }) => {
+      const { rows } = await db.query(`
+        SELECT t.*, COUNT(e.id)::int AS equipos_count
+        FROM torneos t
+        LEFT JOIN equipos e ON e.torneo_id = t.id
+        GROUP BY t.id
+        ORDER BY t.fecha_inicio DESC, t.nombre
+      `);
+      return [200, { data: rows }];
+    }),
+    route("POST", /^\/api\/torneos$/, async ({ db, body, user }) => {
       requireAdmin(user);
       validateTorneoInput(body);
       const payload = torneoPayload(body);
       try {
-        const result = db.prepare("INSERT INTO torneos (nombre, deporte, formato, fecha_inicio, fecha_fin, estado) VALUES (?, ?, ?, ?, ?, ?)")
-          .run(payload.nombre.trim(), payload.deporte.trim(), payload.formato, payload.fecha_inicio, payload.fecha_fin || null, payload.estado);
-        return [201, { data: db.prepare("SELECT * FROM torneos WHERE id = ?").get(result.lastInsertRowid) }];
+        const { rows } = await db.query(
+          "INSERT INTO torneos (nombre, deporte, formato, fecha_inicio, fecha_fin, estado) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+          [payload.nombre.trim(), payload.deporte.trim(), payload.formato, payload.fecha_inicio, payload.fecha_fin || null, payload.estado]
+        );
+        return [201, { data: rows[0] }];
       } catch (error) {
-        if (String(error.message).includes("UNIQUE")) throw new HttpError(409, "El nombre del torneo ya existe.");
+        if (isUniqueViolation(error)) throw new HttpError(409, "El nombre del torneo ya existe.");
         throw error;
       }
     }),
-    route("GET", /^\/api\/torneos\/(\d+)$/, ({ db, match }) => [200, { data: ensureTorneo(db, parseId(match[1])) }]),
-    route("PUT", /^\/api\/torneos\/(\d+)$/, ({ db, body, match, user }) => {
+    route("GET", /^\/api\/torneos\/(\d+)$/, async ({ db, match }) => [200, { data: await ensureTorneo(db, parseId(match[1])) }]),
+    route("PUT", /^\/api\/torneos\/(\d+)$/, async ({ db, body, match, user }) => {
       requireAdmin(user);
       const id = parseId(match[1]);
-      const current = ensureTorneo(db, id);
+      const current = await ensureTorneo(db, id);
       validateTorneoInput(body, { partial: true });
       const payload = torneoPayload(body, current);
       try {
-        db.prepare("UPDATE torneos SET nombre=?, deporte=?, formato=?, fecha_inicio=?, fecha_fin=?, estado=?, updated_at=datetime('now') WHERE id=?")
-          .run(payload.nombre.trim(), payload.deporte.trim(), payload.formato, payload.fecha_inicio, payload.fecha_fin || null, payload.estado, id);
-        return [200, { data: ensureTorneo(db, id) }];
+        const { rows } = await db.query(
+          "UPDATE torneos SET nombre=$1, deporte=$2, formato=$3, fecha_inicio=$4, fecha_fin=$5, estado=$6, updated_at=CURRENT_TIMESTAMP WHERE id=$7 RETURNING *",
+          [payload.nombre.trim(), payload.deporte.trim(), payload.formato, payload.fecha_inicio, payload.fecha_fin || null, payload.estado, id]
+        );
+        return [200, { data: rows[0] }];
       } catch (error) {
-        if (String(error.message).includes("UNIQUE")) throw new HttpError(409, "El nombre del torneo ya existe.");
+        if (isUniqueViolation(error)) throw new HttpError(409, "El nombre del torneo ya existe.");
         throw error;
       }
     }),
-    route("DELETE", /^\/api\/torneos\/(\d+)$/, ({ db, match, user }) => {
+    route("DELETE", /^\/api\/torneos\/(\d+)$/, async ({ db, match, user }) => {
       requireAdmin(user);
-      const result = db.prepare("DELETE FROM torneos WHERE id = ?").run(parseId(match[1]));
-      if (!result.changes) throw new HttpError(404, "Torneo no encontrado.");
+      const result = await db.query("DELETE FROM torneos WHERE id = $1", [parseId(match[1])]);
+      if (!result.rowCount) throw new HttpError(404, "Torneo no encontrado.");
       return [200, { message: "Torneo eliminado." }];
     }),
 
-    route("GET", /^\/api\/torneos\/(\d+)\/equipos$/, ({ db, match }) => {
+    route("GET", /^\/api\/torneos\/(\d+)\/equipos$/, async ({ db, match }) => {
       const torneoId = parseId(match[1], "torneo_id");
-      ensureTorneo(db, torneoId);
-      return [200, { data: db.prepare("SELECT * FROM equipos WHERE torneo_id = ? ORDER BY grupo, nombre").all(torneoId) }];
+      await ensureTorneo(db, torneoId);
+      const { rows } = await db.query("SELECT * FROM equipos WHERE torneo_id = $1 ORDER BY grupo NULLS LAST, nombre", [torneoId]);
+      return [200, { data: rows }];
     }),
-    route("GET", /^\/api\/torneos\/(\d+)\/clasificacion$/, ({ db, match }) => {
+    route("GET", /^\/api\/torneos\/(\d+)\/clasificacion$/, async ({ db, match }) => {
       const torneoId = parseId(match[1], "torneo_id");
-      ensureTorneo(db, torneoId);
-      const teams = db.prepare("SELECT * FROM equipos WHERE torneo_id = ? ORDER BY grupo, nombre").all(torneoId);
-      const matches = db.prepare("SELECT * FROM partidos WHERE torneo_id = ? AND estado = 'FINALIZADO'").all(torneoId);
-      return [200, { data: { grupos: buildStandings(teams, matches) } }];
+      await ensureTorneo(db, torneoId);
+      const [teams, matches] = await Promise.all([
+        db.query("SELECT * FROM equipos WHERE torneo_id = $1 ORDER BY grupo NULLS LAST, nombre", [torneoId]),
+        db.query("SELECT * FROM partidos WHERE torneo_id = $1 AND estado = 'FINALIZADO'", [torneoId])
+      ]);
+      return [200, { data: { grupos: buildStandings(teams.rows, matches.rows) } }];
     }),
-    route("POST", /^\/api\/torneos\/(\d+)\/equipos$/, ({ db, body, match, user }) => {
+    route("POST", /^\/api\/torneos\/(\d+)\/equipos$/, async ({ db, body, match, user }) => {
       requireAdmin(user);
       const torneoId = parseId(match[1], "torneo_id");
-      ensureTorneo(db, torneoId);
+      await ensureTorneo(db, torneoId);
       validateEquipoInput(body);
       try {
-        const result = db.prepare("INSERT INTO equipos (torneo_id, nombre, grupo) VALUES (?, ?, ?)")
-          .run(torneoId, body.nombre.trim(), body.grupo?.trim() || null);
-        return [201, { data: db.prepare("SELECT * FROM equipos WHERE id = ?").get(result.lastInsertRowid) }];
+        const { rows } = await db.query(
+          "INSERT INTO equipos (torneo_id, nombre, grupo) VALUES ($1, $2, $3) RETURNING *",
+          [torneoId, body.nombre.trim(), body.grupo?.trim() || null]
+        );
+        return [201, { data: rows[0] }];
       } catch (error) {
-        if (String(error.message).includes("UNIQUE")) throw new HttpError(409, "El nombre del equipo ya existe en este torneo.");
+        if (isUniqueViolation(error)) throw new HttpError(409, "El nombre del equipo ya existe en este torneo.");
         throw error;
       }
     }),
-    route("PUT", /^\/api\/equipos\/(\d+)$/, ({ db, body, match, user }) => {
+    route("PUT", /^\/api\/equipos\/(\d+)$/, async ({ db, body, match, user }) => {
       requireAdmin(user);
       const id = parseId(match[1]);
-      const current = ensureEquipo(db, id, "Equipo");
+      const current = await ensureEquipo(db, id, "Equipo");
       validateEquipoInput(body, { partial: true });
       const payload = equipoPayload(body, current);
       try {
-        db.prepare("UPDATE equipos SET nombre=?, grupo=?, updated_at=datetime('now') WHERE id=?")
-          .run(payload.nombre.trim(), payload.grupo?.trim() || null, id);
-        return [200, { data: db.prepare("SELECT * FROM equipos WHERE id = ?").get(id) }];
+        const { rows } = await db.query(
+          "UPDATE equipos SET nombre=$1, grupo=$2, updated_at=CURRENT_TIMESTAMP WHERE id=$3 RETURNING *",
+          [payload.nombre.trim(), payload.grupo?.trim() || null, id]
+        );
+        return [200, { data: rows[0] }];
       } catch (error) {
-        if (String(error.message).includes("UNIQUE")) throw new HttpError(409, "El nombre del equipo ya existe en este torneo.");
+        if (isUniqueViolation(error)) throw new HttpError(409, "El nombre del equipo ya existe en este torneo.");
         throw error;
       }
     }),
-    route("DELETE", /^\/api\/equipos\/(\d+)$/, ({ db, match, user }) => {
+    route("DELETE", /^\/api\/equipos\/(\d+)$/, async ({ db, match, user }) => {
       requireAdmin(user);
-      const result = db.prepare("DELETE FROM equipos WHERE id = ?").run(parseId(match[1]));
-      if (!result.changes) throw new HttpError(404, "Equipo no encontrado.");
+      const result = await db.query("DELETE FROM equipos WHERE id = $1", [parseId(match[1])]);
+      if (!result.rowCount) throw new HttpError(404, "Equipo no encontrado.");
       return [200, { message: "Equipo eliminado." }];
     }),
 
-    route("GET", /^\/api\/torneos\/(\d+)\/partidos$/, ({ db, match }) => {
+    route("GET", /^\/api\/torneos\/(\d+)\/partidos$/, async ({ db, match }) => {
       const torneoId = parseId(match[1], "torneo_id");
-      ensureTorneo(db, torneoId);
-      return [200, { data: db.prepare(`${partidoFields} WHERE p.torneo_id = ? ORDER BY p.fecha`).all(torneoId) }];
+      await ensureTorneo(db, torneoId);
+      const { rows } = await db.query(`${partidoFields} WHERE p.torneo_id = $1 ORDER BY p.fecha`, [torneoId]);
+      return [200, { data: rows }];
     }),
-    route("POST", /^\/api\/torneos\/(\d+)\/partidos$/, ({ db, body, match, user }) => {
+    route("POST", /^\/api\/torneos\/(\d+)\/partidos$/, async ({ db, body, match, user }) => {
       requireAdmin(user);
       const torneoId = parseId(match[1], "torneo_id");
-      ensureTorneo(db, torneoId);
+      await ensureTorneo(db, torneoId);
       validatePartidoInput(body);
       const payload = partidoPayload(body);
-      ensureEquiposDelTorneo(db, torneoId, payload);
-      const result = db.prepare("INSERT INTO partidos (torneo_id, equipo_local_id, equipo_visitante_id, fecha, sede, ronda, marcador_local, marcador_visitante, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
-        .run(torneoId, payload.equipo_local_id, payload.equipo_visitante_id, payload.fecha, payload.sede.trim(), payload.ronda.trim(), payload.marcador_local, payload.marcador_visitante, payload.estado);
-      return [201, { data: getPartido(db, result.lastInsertRowid) }];
+      await ensureEquiposDelTorneo(db, torneoId, payload);
+      const { rows } = await db.query(
+        "INSERT INTO partidos (torneo_id, equipo_local_id, equipo_visitante_id, fecha, sede, ronda, marcador_local, marcador_visitante, estado) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id",
+        [torneoId, payload.equipo_local_id, payload.equipo_visitante_id, payload.fecha, payload.sede.trim(), payload.ronda.trim(), payload.marcador_local, payload.marcador_visitante, payload.estado]
+      );
+      return [201, { data: await getPartido(db, rows[0].id) }];
     }),
-    route("GET", /^\/api\/partidos\/(\d+)$/, ({ db, match }) => {
-      const row = getPartido(db, parseId(match[1]));
+    route("GET", /^\/api\/partidos\/(\d+)$/, async ({ db, match }) => {
+      const row = await getPartido(db, parseId(match[1]));
       if (!row) throw new HttpError(404, "Partido no encontrado.");
       return [200, { data: row }];
     }),
-    route("PUT", /^\/api\/partidos\/(\d+)$/, ({ db, body, match, user }) => {
+    route("PUT", /^\/api\/partidos\/(\d+)$/, async ({ db, body, match, user }) => {
       requireAdmin(user);
       const id = parseId(match[1]);
-      const current = getPartido(db, id);
+      const current = await getPartido(db, id);
       if (!current) throw new HttpError(404, "Partido no encontrado.");
       validatePartidoInput(body, { partial: true });
       const payload = partidoPayload(body, current);
-      ensureEquiposDelTorneo(db, current.torneo_id, payload);
-      db.prepare("UPDATE partidos SET equipo_local_id=?, equipo_visitante_id=?, fecha=?, sede=?, ronda=?, marcador_local=?, marcador_visitante=?, estado=?, updated_at=datetime('now') WHERE id=?")
-        .run(payload.equipo_local_id, payload.equipo_visitante_id, payload.fecha, payload.sede.trim(), payload.ronda.trim(), payload.marcador_local, payload.marcador_visitante, payload.estado, id);
-      return [200, { data: getPartido(db, id) }];
+      await ensureEquiposDelTorneo(db, current.torneo_id, payload);
+      await db.query(
+        "UPDATE partidos SET equipo_local_id=$1, equipo_visitante_id=$2, fecha=$3, sede=$4, ronda=$5, marcador_local=$6, marcador_visitante=$7, estado=$8, updated_at=CURRENT_TIMESTAMP WHERE id=$9",
+        [payload.equipo_local_id, payload.equipo_visitante_id, payload.fecha, payload.sede.trim(), payload.ronda.trim(), payload.marcador_local, payload.marcador_visitante, payload.estado, id]
+      );
+      return [200, { data: await getPartido(db, id) }];
     }),
-    route("PUT", /^\/api\/partidos\/(\d+)\/resultado$/, ({ db, body, match, user }) => {
+    route("PUT", /^\/api\/partidos\/(\d+)\/resultado$/, async ({ db, body, match, user }) => {
       requireAdmin(user);
       const id = parseId(match[1]);
-      if (!getPartido(db, id)) throw new HttpError(404, "Partido no encontrado.");
+      if (!await getPartido(db, id)) throw new HttpError(404, "Partido no encontrado.");
       validatePartidoInput(body, { resultado: true });
-      db.prepare("UPDATE partidos SET marcador_local=?, marcador_visitante=?, estado='FINALIZADO', updated_at=datetime('now') WHERE id=?")
-        .run(Number(body.marcador_local), Number(body.marcador_visitante), id);
-      return [200, { data: getPartido(db, id) }];
+      await db.query(
+        "UPDATE partidos SET marcador_local=$1, marcador_visitante=$2, estado='FINALIZADO', updated_at=CURRENT_TIMESTAMP WHERE id=$3",
+        [Number(body.marcador_local), Number(body.marcador_visitante), id]
+      );
+      return [200, { data: await getPartido(db, id) }];
     }),
-    route("DELETE", /^\/api\/partidos\/(\d+)$/, ({ db, match, user }) => {
+    route("DELETE", /^\/api\/partidos\/(\d+)$/, async ({ db, match, user }) => {
       requireAdmin(user);
-      const result = db.prepare("DELETE FROM partidos WHERE id = ?").run(parseId(match[1]));
-      if (!result.changes) throw new HttpError(404, "Partido no encontrado.");
+      const result = await db.query("DELETE FROM partidos WHERE id = $1", [parseId(match[1])]);
+      if (!result.rowCount) throw new HttpError(404, "Partido no encontrado.");
       return [200, { message: "Partido eliminado." }];
     })
   ];
 }
 
+const routes = makeRoutes();
+
+export async function handleRequest(req, res) {
+  if (req.method === "OPTIONS") return json(res, 204, {});
+  try {
+    const db = await getDb();
+    const url = new URL(req.url, "http://localhost");
+    const found = routes.find((item) => item.method === req.method && item.pattern.test(url.pathname));
+    if (!found) throw new HttpError(404, "Endpoint no encontrado.");
+    const publicRoute = req.method === "POST" && ["/api/auth/register", "/api/auth/login"].includes(url.pathname);
+    const user = publicRoute ? null : await getAuthUser(req, db);
+    const body = ["POST", "PUT", "PATCH"].includes(req.method) ? await readJson(req) : {};
+    const [status, payload] = await found.handler({ db, user, body, match: url.pathname.match(found.pattern) });
+    return json(res, status, payload);
+  } catch (error) {
+    return json(res, error instanceof HttpError ? error.status : 500, { error: error.message ?? "Error interno", details: error.details });
+  }
+}
+
 export function createApp() {
-  const routes = makeRoutes();
-  return http.createServer(async (req, res) => {
-    if (req.method === "OPTIONS") return json(res, 204, {});
-    try {
-      const db = getDb();
-      const url = new URL(req.url, "http://localhost");
-      const found = routes.find((item) => item.method === req.method && item.pattern.test(url.pathname));
-      if (!found) throw new HttpError(404, "Endpoint no encontrado.");
-      const publicRoute = req.method === "POST" && ["/api/auth/register", "/api/auth/login"].includes(url.pathname);
-      const user = publicRoute ? null : getAuthUser(req, db);
-      const body = ["POST", "PUT", "PATCH"].includes(req.method) ? await readJson(req) : {};
-      const [status, payload] = await found.handler({ db, user, body, match: url.pathname.match(found.pattern) });
-      return json(res, status, payload);
-    } catch (error) {
-      return json(res, error instanceof HttpError ? error.status : 500, { error: error.message ?? "Error interno", details: error.details });
-    }
-  });
+  return http.createServer(handleRequest);
 }

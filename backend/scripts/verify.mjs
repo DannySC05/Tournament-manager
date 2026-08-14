@@ -1,19 +1,14 @@
 import { spawn } from "node:child_process";
 import { once } from "node:events";
-import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const tmpRoot = path.join(rootDir, ".tmp");
-fs.mkdirSync(tmpRoot, { recursive: true });
-const tmpDir = fs.mkdtempSync(path.join(tmpRoot, "verify-"));
-const dbPath = path.join(tmpDir, "test.sqlite");
 const port = 3187;
 const baseUrl = `http://127.0.0.1:${port}`;
 const server = spawn(process.execPath, ["--no-warnings", "src/server.mjs"], {
   cwd: rootDir,
-  env: { ...process.env, PORT: String(port), DB_PATH: dbPath, JWT_SECRET: "verify-secret" },
+  env: { ...process.env, PORT: String(port), DATABASE_URL: "pg-mem://verify", JWT_SECRET: "verify-secret" },
   stdio: ["ignore", "pipe", "pipe"]
 });
 
@@ -45,7 +40,6 @@ async function waitForServer() {
 async function stop() {
   if (!server.killed) server.kill();
   await Promise.race([once(server, "exit").catch(() => undefined), new Promise((resolve) => setTimeout(resolve, 1500))]);
-  fs.rmSync(tmpDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
 }
 
 try {
@@ -92,6 +86,9 @@ try {
 
   res = await request("PUT", `/api/partidos/${partidoId}/resultado`, { token: adminToken, body: { marcador_local: 3, marcador_visitante: 1 } });
   expect(res.status === 200 && res.payload.data.estado === "FINALIZADO", "Registrar resultado debe finalizar el partido.");
+
+  res = await request("GET", `/api/torneos/${torneoId}/clasificacion`, { token: adminToken });
+  expect(res.status === 200 && res.payload.data.grupos[0].clasificacion[0].puntos === 3, "La clasificacion debe calcular los puntos de partidos finalizados.");
 
   res = await request("POST", "/api/auth/register", {
     body: { nombre: "Consulta", email: "consulta@torneos.test", password: "Consulta123", rol: "ADMIN" }

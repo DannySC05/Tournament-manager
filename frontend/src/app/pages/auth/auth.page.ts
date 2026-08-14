@@ -81,7 +81,7 @@ export class AuthPage {
     request.subscribe({
       next: () => this.router.navigateByUrl('/panel'),
       error: (error: HttpErrorResponse) => {
-        this.serverError.set(error.error?.error ?? 'No fue posible conectar con la API. Verifica que el servidor este activo en localhost:3000.');
+        this.serverError.set(error.error?.error ?? 'No fue posible conectar con la API. Verifica la conexion e intentalo nuevamente.');
         this.loading.set(false);
       },
       complete: () => this.loading.set(false)

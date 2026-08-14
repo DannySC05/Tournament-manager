@@ -3,6 +3,7 @@ import { Injectable, computed, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, map, of, tap } from 'rxjs';
 
+import { environment } from '../../../environments/environment';
 import { AuthResponse, AuthUser, LoginRequest, RegisterRequest } from './auth.models';
 
 const TOKEN_KEY = 'torneos_token';
@@ -10,7 +11,7 @@ const USER_KEY = 'torneos_user';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly apiUrl = 'http://localhost:3000/api';
+  private readonly apiUrl = environment.apiBaseUrl;
   private readonly currentUser = signal<AuthUser | null>(this.readStoredUser());
 
   readonly user = this.currentUser.asReadonly();

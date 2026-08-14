@@ -1,12 +1,18 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import "dotenv/config";
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+if (process.env.VERCEL && !process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET es obligatoria en Vercel.");
+}
 
 export const config = {
   rootDir,
   port: Number(process.env.PORT ?? 3000),
-  dbPath: process.env.DB_PATH ?? path.join(rootDir, "database", "torneos.sqlite"),
+  databaseUrl: process.env.DATABASE_URL ?? "",
+  pgPoolMax: Number(process.env.PG_POOL_MAX ?? 1),
   jwtSecret: process.env.JWT_SECRET ?? "cambie-este-secreto-en-produccion",
   jwtExpiresInSeconds: Number(process.env.JWT_EXPIRES_SECONDS ?? 60 * 60 * 8)
 };
