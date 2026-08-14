@@ -81,7 +81,7 @@ export class AuthPage {
     request.subscribe({
       next: () => this.router.navigateByUrl('/panel'),
       error: (error: HttpErrorResponse) => {
-        this.serverError.set(error.error?.error ?? 'No fue posible conectar con la API. Verifica la conexion e intentalo nuevamente.');
+        this.serverError.set(this.getServerErrorMessage(error));
         this.loading.set(false);
       },
       complete: () => this.loading.set(false)
@@ -105,5 +105,12 @@ export class AuthPage {
       nombre.setValue('');
     }
     nombre.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private getServerErrorMessage(error: HttpErrorResponse): string {
+    const response = error.error;
+    if (typeof response?.error === 'string') return response.error;
+    if (typeof response?.message === 'string') return response.message;
+    return 'No fue posible conectar con la API. Verifica la conexion e intentalo nuevamente.';
   }
 }
