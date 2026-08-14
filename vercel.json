@@ -5,6 +5,14 @@
   "outputDirectory": "frontend/dist/frontend/browser",
   "rewrites": [
     {
+      "source": "/api",
+      "destination": "/api/entry"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "/api/entry?path=:path*"
+    },
+    {
       "source": "/((?!api(?:/|$)).*)",
       "destination": "/index.html"
     }

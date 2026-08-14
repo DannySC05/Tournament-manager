@@ -81,7 +81,7 @@ npm run verify
    - `JWT_EXPIRES_SECONDS`: `28800` o el valor que prefieras.
 5. Haz un nuevo despliegue. Las variables se aplican a despliegues nuevos.
 
-La función `api/[...path].mjs` delega al mismo manejador REST que se usa localmente. La regla de `vercel.json` deja pasar `/api/*` hacia esa función y redirige las rutas Angular al `index.html`.
+La función `api/entry.js` delega al mismo manejador REST que se usa localmente. Las reglas de `vercel.json` envían `/api/*` hacia esa función y redirigen las rutas Angular al `index.html`.
 
 ## Seguridad y operación
 
