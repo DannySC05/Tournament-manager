@@ -48,6 +48,12 @@ export class TeamsPage implements OnInit {
   protected readonly editing = signal<Team | null>(null);
   protected readonly deletingTeam = signal<Team | null>(null);
   protected readonly selectedTournament = computed(() => this.tournaments().find((tournament) => tournament.id === this.selectedTournamentId()) ?? null);
+  protected readonly groupOptions = computed(() => {
+    const tournament = this.selectedTournament();
+    const totalGroups = tournament?.cantidad_grupos ?? 0;
+    if (!tournament || tournament.formato === 'ELIMINACION' || totalGroups < 1) return [];
+    return Array.from({ length: totalGroups }, (_, index) => String.fromCharCode(65 + index));
+  });
   protected readonly selectedSelection = computed(() => this.catalog().find((selection) => selection.id === this.form.controls.seleccion_catalogo_id.value) ?? null);
   protected readonly visibleTeams = computed(() => {
     const query = this.query().trim().toLocaleLowerCase();
@@ -101,7 +107,7 @@ export class TeamsPage implements OnInit {
     this.formOpen.set(true);
     this.formError.set('');
     this.catalogQuery.set('');
-    this.form.reset({ seleccion_catalogo_id: team.seleccion_catalogo_id ?? 0, grupo: team.grupo ?? '' });
+    this.form.reset({ seleccion_catalogo_id: team.seleccion_catalogo_id ?? 0, grupo: this.normalizeGroup(team.grupo) });
   }
 
   protected chooseSelection(selection: SelectionCatalogItem): void {
@@ -203,5 +209,10 @@ export class TeamsPage implements OnInit {
       error: (error: HttpErrorResponse) => this.error.set(error.error?.error ?? 'No fue posible cargar las selecciones. Verifica que la API este activa.'),
       complete: () => this.loadingTeams.set(false)
     });
+  }
+
+  private normalizeGroup(group: string | null): string {
+    const normalized = group?.trim().replace(/^grupo\s+/i, '').toUpperCase() ?? '';
+    return this.groupOptions().includes(normalized) ? normalized : '';
   }
 }

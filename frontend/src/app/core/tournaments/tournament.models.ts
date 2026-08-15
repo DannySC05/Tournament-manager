@@ -22,6 +22,6 @@ export interface TournamentPayload {
   cantidad_grupos: number | null;
   fecha_inicio: string;
   fecha_fin: string | null;
-  estado: TournamentStatus;
-  ganador_equipo_id: number | null;
+  estado?: TournamentStatus;
+  ganador_equipo_id?: number | null;
 }

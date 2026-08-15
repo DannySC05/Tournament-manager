@@ -81,6 +81,9 @@ try {
   expect(res.status === 201, "ADMIN debe crear torneos.");
   const torneoId = res.payload.data.id;
 
+  res = await request("POST", `/api/torneos/${torneoId}/equipos`, { token: adminToken, body: { seleccion_catalogo_id: seleccionAzulId, grupo: "Z" } });
+  expect(res.status === 400, "Un grupo fuera de la configuracion del torneo debe rechazarse.");
+
   res = await request("POST", `/api/torneos/${torneoId}/equipos`, { token: adminToken, body: { seleccion_catalogo_id: seleccionAzulId, grupo: "A" } });
   expect(res.status === 201, "ADMIN debe registrar equipos.");
   const equipoAzulId = res.payload.data.id;

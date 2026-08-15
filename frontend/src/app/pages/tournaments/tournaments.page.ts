@@ -39,13 +39,14 @@ export class TournamentsPage implements OnInit {
   protected readonly deletingTournament = signal<Tournament | null>(null);
   protected readonly selectedFormat = signal<TournamentFormat>('LIGA');
   protected readonly participantCount = signal<number>(32);
+  protected readonly groupCount = signal<number>(8);
   protected readonly participantOptions = PARTICIPANT_OPTIONS;
   protected readonly requiresGroups = computed(() => this.selectedFormat() !== 'ELIMINACION');
   protected readonly groupOptions = computed(() => this.requiresGroups()
     ? Array.from({ length: this.participantCount() / 2 }, (_, index) => index + 1).filter((groups) => this.participantCount() % groups === 0)
     : []);
   protected readonly countriesPerGroup = computed(() => {
-    const groups = Number(this.form.controls.cantidad_grupos.value);
+    const groups = this.groupCount();
     return groups > 0 ? this.participantCount() / groups : 0;
   });
   protected readonly visibleTournaments = computed(() => {
@@ -77,6 +78,7 @@ export class TournamentsPage implements OnInit {
     this.form.reset({ nombre: '', formato: 'LIGA', participantes_count: 32, cantidad_grupos: 8, fecha_inicio: '', fecha_fin: '', estado: 'BORRADOR', ganador_equipo_id: 0 });
     this.selectedFormat.set('LIGA');
     this.participantCount.set(32);
+    this.groupCount.set(8);
     this.normalizeGroupCount();
   }
 
@@ -96,6 +98,7 @@ export class TournamentsPage implements OnInit {
     });
     this.selectedFormat.set(tournament.formato);
     this.participantCount.set(tournament.participantes_count);
+    this.groupCount.set(tournament.cantidad_grupos ?? 1);
     this.normalizeGroupCount();
     this.teamsApi.list(tournament.id).subscribe({
       next: ({ data }) => this.winnerCandidates.set(data.map(({ id, nombre }) => ({ id, nombre }))),
@@ -124,7 +127,11 @@ export class TournamentsPage implements OnInit {
     this.normalizeGroupCount();
   }
 
-  protected onGroupChange(value: string): void { this.form.controls.cantidad_grupos.setValue(Number(value)); }
+  protected onGroupChange(value: string): void {
+    const groups = Number(value);
+    this.groupCount.set(groups);
+    this.form.controls.cantidad_grupos.setValue(groups);
+  }
   protected onStatusChange(value: string): void { this.form.controls.estado.setValue(value as TournamentStatus); }
   protected isFinalized(): boolean { return this.form.controls.estado.value === 'FINALIZADO'; }
 
@@ -148,6 +155,7 @@ export class TournamentsPage implements OnInit {
       return;
     }
 
+    const current = this.editing();
     const payload: TournamentPayload = {
       nombre: value.nombre.trim(),
       formato: value.formato,
@@ -155,10 +163,8 @@ export class TournamentsPage implements OnInit {
       cantidad_grupos: value.formato === 'ELIMINACION' ? null : value.cantidad_grupos,
       fecha_inicio: value.fecha_inicio,
       fecha_fin: value.fecha_fin,
-      estado: value.estado,
-      ganador_equipo_id: value.estado === 'FINALIZADO' ? value.ganador_equipo_id : null
+      ...(current ? { estado: value.estado, ganador_equipo_id: value.estado === 'FINALIZADO' ? value.ganador_equipo_id : null } : {})
     };
-    const current = this.editing();
     this.saving.set(true);
     (current ? this.tournamentsApi.update(current.id, payload) : this.tournamentsApi.create(payload)).subscribe({
       next: () => { this.closeForm(); this.loadTournaments(); },
@@ -191,12 +197,14 @@ export class TournamentsPage implements OnInit {
     if (!this.requiresGroups()) {
       this.form.controls.cantidad_grupos.clearValidators();
       this.form.controls.cantidad_grupos.setValue(1);
+      this.groupCount.set(1);
       this.form.controls.cantidad_grupos.updateValueAndValidity();
       return;
     }
     this.form.controls.cantidad_grupos.setValidators(Validators.required);
     const current = Number(this.form.controls.cantidad_grupos.value);
     if (!this.groupOptions().includes(current)) this.form.controls.cantidad_grupos.setValue(this.groupOptions()[0]);
+    this.groupCount.set(Number(this.form.controls.cantidad_grupos.value));
     this.form.controls.cantidad_grupos.updateValueAndValidity();
   }
 

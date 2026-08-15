@@ -100,4 +100,8 @@ body .catalog-option > span { align-items:center; color:var(--world-emerald-brig
 body .catalog-option strong { font-size:.78rem; }
 body .catalog-option small { color:var(--world-muted); font-size:.67rem; }
 body .selection-summary { background:rgba(232,180,50,.10); border:1px solid rgba(232,180,50,.20); border-radius:7px; color:#e8d190; font-size:.76rem; margin:0; padding:.6rem .7rem; }
+body .form-dialog .configuration-note { align-content:center; background:linear-gradient(135deg,rgba(34,211,77,.13),rgba(232,180,50,.08)); border:1px solid rgba(114,230,140,.28); border-radius:8px; display:grid; justify-items:center; margin:0; min-height:68px; padding:.5rem .7rem; text-align:center; }
+body .form-dialog .configuration-note span { color:var(--world-muted); font-size:.62rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+body .form-dialog .configuration-note strong { color:var(--world-emerald-bright); font-size:.96rem; line-height:1.15; }
+body .form-dialog .configuration-note small { color:#d5ddd8; font-size:.69rem; line-height:1.25; }
 @media (max-width:700px) { body .page-actions { justify-content:flex-start; } body .catalog-button { flex:1; } }

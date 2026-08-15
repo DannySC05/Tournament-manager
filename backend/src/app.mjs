@@ -107,6 +107,23 @@ function equipoPayload(body, current = {}) {
   };
 }
 
+function groupOptionsForTournament(torneo) {
+  if (torneo.formato === "ELIMINACION" || !torneo.cantidad_grupos) return [];
+  return Array.from({ length: Number(torneo.cantidad_grupos) }, (_, index) => String.fromCharCode(65 + index));
+}
+
+function validateGroupForTournament(torneo, group) {
+  const normalized = group?.trim() || null;
+  const options = groupOptionsForTournament(torneo);
+  if (!options.length) {
+    assertValid(!normalized, "Este torneo eliminatorio no utiliza grupos.");
+    return;
+  }
+  if (normalized) {
+    assertValid(options.includes(normalized), `El grupo debe ser una opcion valida entre A y ${options.at(-1)}.`);
+  }
+}
+
 function partidoPayload(body, current = {}) {
   return {
     equipo_local_id: body.equipo_local_id !== undefined ? Number(body.equipo_local_id) : current.equipo_local_id,
@@ -322,6 +339,7 @@ function makeRoutes() {
       const torneoId = parseId(match[1], "torneo_id");
       const torneo = await ensureTorneo(db, torneoId);
       validateEquipoInput(body);
+      validateGroupForTournament(torneo, body.grupo);
       const { rows: totals } = await db.query("SELECT COUNT(*)::int AS total FROM equipos WHERE torneo_id = $1", [torneoId]);
       if (totals[0].total >= torneo.participantes_count) throw new HttpError(400, `Este torneo admite un maximo de ${torneo.participantes_count} selecciones.`);
       const selection = await ensureSeleccionCatalogo(db, Number(body.seleccion_catalogo_id));
@@ -342,9 +360,11 @@ function makeRoutes() {
       requireAdmin(user);
       const id = parseId(match[1]);
       const current = await ensureEquipo(db, id, "Equipo");
+      const torneo = await ensureTorneo(db, current.torneo_id);
       validateEquipoInput(body, { partial: true });
       const payload = equipoPayload(body, current);
       if (payload.seleccion_catalogo_id !== current.seleccion_catalogo_id) throw new HttpError(400, "No se puede cambiar la seleccion de un equipo ya registrado.");
+      validateGroupForTournament(torneo, payload.grupo);
       try {
         const { rows } = await db.query(
           "UPDATE equipos SET grupo=$1, updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING *",
