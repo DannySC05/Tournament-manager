@@ -2,14 +2,15 @@
 
 .dashboard-shell { background:#020b08; min-height:100vh; }
 .dashboard-workspace { margin-left:250px; min-height:100vh; }
-.dashboard-content { box-sizing:border-box; margin:0 auto; max-width:1540px; padding:20px 24px 30px; }
-.stats-grid { display:grid; gap:16px; grid-template-columns:repeat(3, minmax(0, 1fr)); margin:16px 0; }
-.dashboard-grid { display:grid; gap:16px; grid-template-columns:minmax(300px,1.16fr) minmax(280px,.92fr) minmax(245px,.84fr); }
+.dashboard-content { box-sizing:border-box; margin:0 auto; max-width:1380px; padding:20px 22px 28px; }
+.stats-grid { display:grid; gap:10px; grid-template-columns:repeat(3, minmax(0, 1fr)); margin:10px 0; }
+.dashboard-grid { align-items:stretch; display:grid; gap:10px; grid-template-columns:minmax(300px,1.25fr) minmax(250px,.9fr) minmax(235px,.9fr); grid-template-rows:minmax(224px, 1fr) auto; }
+.dashboard-grid.with-actions app-upcoming-matches { grid-row:span 2; }
 .quick-actions-slot { grid-column:2 / 4; }
 .loading-state { align-items:center; color:#9fa8a3; display:flex; font-size:.86rem; gap:.65rem; justify-content:center; min-height:100vh; }
 .loading-state span { animation:spin .7s linear infinite; border:2px solid rgba(255,255,255,.17); border-radius:50%; border-top-color:#22d34d; height:19px; width:19px; }
 .menu-backdrop { display:none; }
 @keyframes spin { to { transform:rotate(360deg); } }
 
-@media (max-width:1180px) { .dashboard-workspace { margin-left:66px; } .dashboard-content { padding:18px 20px 26px; } .dashboard-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); } app-recent-results { grid-column:span 2; } .quick-actions-slot { grid-column:span 2; } }
+@media (max-width:1180px) { .dashboard-workspace { margin-left:66px; } .dashboard-content { padding:18px 20px 26px; } .dashboard-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); grid-template-rows:auto; } .dashboard-grid.with-actions app-upcoming-matches { grid-row:auto; } app-recent-results { grid-column:span 2; } .quick-actions-slot { grid-column:span 2; } }
 @media (max-width:760px) { .dashboard-workspace { margin-left:0; } .dashboard-content { padding:14px 14px 24px; } .stats-grid { grid-template-columns:1fr; } .dashboard-grid { grid-template-columns:1fr; } app-recent-results, .quick-actions-slot { grid-column:auto; } .menu-backdrop { background:rgba(0,0,0,.55); border:0; display:block; inset:0; position:fixed; z-index:15; } }

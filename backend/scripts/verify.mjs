@@ -55,7 +55,14 @@ try {
 
   res = await request("POST", "/api/torneos", {
     token: adminToken,
-    body: { nombre: "Copa Ciudad", deporte: "Futbol", formato: "LIGA", fecha_inicio: "2026-09-01", estado: "BORRADOR" }
+    body: {
+      nombre: "Copa Ciudad",
+      formato: "LIGA",
+      participantes_count: 2,
+      cantidad_grupos: 1,
+      fecha_inicio: "2026-09-01",
+      fecha_fin: "2026-09-30"
+    }
   });
   expect(res.status === 201, "ADMIN debe crear torneos.");
   const torneoId = res.payload.data.id;
@@ -67,6 +74,12 @@ try {
   res = await request("POST", `/api/torneos/${torneoId}/equipos`, { token: adminToken, body: { nombre: "Equipo Rojo", grupo: "A" } });
   expect(res.status === 201, "ADMIN debe registrar un segundo equipo.");
   const equipoRojoId = res.payload.data.id;
+
+  res = await request("POST", `/api/torneos/${torneoId}/equipos`, { token: adminToken, body: { nombre: "Equipo Verde", grupo: "A" } });
+  expect(res.status === 400, "No se debe superar el cupo de participantes configurado.");
+
+  res = await request("PUT", `/api/torneos/${torneoId}`, { token: adminToken, body: { estado: "FINALIZADO" } });
+  expect(res.status === 400, "Un torneo no puede finalizar sin una seleccion ganadora.");
 
   res = await request("POST", `/api/torneos/${torneoId}/partidos`, {
     token: adminToken,
@@ -89,6 +102,12 @@ try {
 
   res = await request("GET", `/api/torneos/${torneoId}/clasificacion`, { token: adminToken });
   expect(res.status === 200 && res.payload.data.grupos[0].clasificacion[0].puntos === 3, "La clasificacion debe calcular los puntos de partidos finalizados.");
+
+  res = await request("PUT", `/api/torneos/${torneoId}`, { token: adminToken, body: { estado: "FINALIZADO", ganador_equipo_id: equipoAzulId } });
+  expect(res.status === 200 && Number(res.payload.data?.ganador_equipo_id) === Number(equipoAzulId), `El torneo debe finalizar solo con una seleccion ganadora registrada. Respuesta: ${JSON.stringify(res.payload)}`);
+
+  res = await request("DELETE", `/api/equipos/${equipoAzulId}`, { token: adminToken });
+  expect(res.status === 400, "No se debe eliminar la seleccion ganadora de un torneo finalizado.");
 
   res = await request("POST", "/api/auth/register", {
     body: { nombre: "Consulta", email: "consulta@torneos.test", password: "Consulta123", rol: "ADMIN" }

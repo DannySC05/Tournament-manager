@@ -43,6 +43,7 @@ export class DashboardPage implements OnInit {
   protected readonly loading = signal(true);
 
   protected readonly currentTournament = computed(() => this.data()?.tournament ?? null);
+  protected readonly tournaments = computed(() => this.data()?.tournaments ?? []);
   protected readonly teams = computed(() => this.data()?.teams ?? []);
   protected readonly sortedMatches = computed(() => [...(this.data()?.matches ?? [])].sort((left, right) => new Date(left.fecha).getTime() - new Date(right.fecha).getTime()));
   protected readonly upcomingMatches = computed(() => this.sortedMatches().filter((match) => match.estado === 'PROGRAMADO').slice(0, 4));
@@ -65,7 +66,17 @@ export class DashboardPage implements OnInit {
   });
 
   ngOnInit(): void {
-    this.dashboardService.loadOverview().pipe(
+    this.loadOverview();
+  }
+
+  protected changeTournament(tournamentId: number): void {
+    if (!Number.isInteger(tournamentId) || tournamentId === this.currentTournament()?.id) return;
+    this.loadOverview(tournamentId);
+  }
+
+  private loadOverview(tournamentId?: number): void {
+    this.loading.set(true);
+    this.dashboardService.loadOverview(tournamentId).pipe(
       switchMap((data) => {
         const fallback = this.deriveStandings(data);
         if (data.isPreview || data.tournament.id <= 0) return of({ data, standings: fallback });

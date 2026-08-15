@@ -31,9 +31,12 @@ export async function getDb() {
 
 export async function runMigrations(connection) {
   const activeConnection = connection ?? await getDb();
-  const migrationPath = path.join(config.rootDir, "database", "migrations", "001_init.sql");
-  const migration = await fs.readFile(migrationPath, "utf8");
-  await activeConnection.query(migration);
+  const migrationsDirectory = path.join(config.rootDir, "database", "migrations");
+  const migrationFiles = (await fs.readdir(migrationsDirectory)).filter((file) => file.endsWith(".sql")).sort();
+  for (const file of migrationFiles) {
+    const migration = await fs.readFile(path.join(migrationsDirectory, file), "utf8");
+    await activeConnection.query(migration);
+  }
 }
 
 export async function closeDb() {

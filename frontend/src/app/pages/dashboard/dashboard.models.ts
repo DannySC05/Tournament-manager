@@ -7,6 +7,7 @@ import type { Match } from '../../core/matches/match.models';
 
 export interface DashboardData {
   tournament: Tournament;
+  tournaments: Tournament[];
   teams: Team[];
   matches: Match[];
   isPreview: boolean;

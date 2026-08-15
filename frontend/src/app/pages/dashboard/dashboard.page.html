@@ -4,7 +4,7 @@
 
   <div class="dashboard-workspace">
     @if (currentTournament(); as tournament) {
-      <app-dashboard-topbar [tournamentName]="tournament.nombre" [userName]="auth.user()?.nombre ?? 'Usuario'" [role]="auth.user()?.rol ?? 'CONSULTA'" [menuOpen]="menuOpen()" (menuToggle)="toggleMenu()" />
+      <app-dashboard-topbar [tournamentName]="tournament.nombre" [tournaments]="tournaments()" [selectedTournamentId]="tournament.id" [userName]="auth.user()?.nombre ?? 'Usuario'" [role]="auth.user()?.rol ?? 'CONSULTA'" [menuOpen]="menuOpen()" (menuToggle)="toggleMenu()" (tournamentSelected)="changeTournament($event)" (createTournament)="openModule('torneos')" />
       <main class="dashboard-content">
         <app-world-cup-banner [tournament]="tournament" [phase]="currentPhase()" [durationDays]="durationDays()" [dateRange]="dateRange()" [statusLabel]="formatTournamentStatus(tournament.estado)" />
 
@@ -12,7 +12,7 @@
           @for (stat of stats(); track stat.label) { <app-stat-card [icon]="stat.icon" [value]="stat.value" [label]="stat.label" [detail]="stat.detail" [tone]="stat.tone" /> }
         </section>
 
-        <section class="dashboard-grid" aria-label="Actividad del mundial">
+        <section class="dashboard-grid" [class.with-actions]="auth.isAdmin()" aria-label="Actividad del mundial">
           <app-upcoming-matches [matches]="upcomingMatches()" (openCalendar)="openModule('partidos')" />
           <app-dashboard-standings [groups]="standings()" (openFullTable)="openModule('clasificacion')" />
           <app-recent-results [matches]="recentMatches()" (openResults)="openModule('resultados')" />

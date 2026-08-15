@@ -11,7 +11,7 @@ import { LucideCalendarDays, LucideMedal, LucideUsersRound } from '@lucide/angul
     </article>
   `,
   styles: `
-    .stat-card { align-items:center; background:rgba(6,20,15,.86); border:1px solid rgba(255,255,255,.09); border-radius:14px; box-sizing:border-box; display:flex; justify-content:space-between; min-height:124px; overflow:hidden; padding:1.15rem 1.25rem; position:relative; } .label { color:#9fa8a3; display:block; font-size:.78rem; font-weight:700; } strong { color:#f4f6f5; display:block; font-size:2rem; line-height:1; margin:.5rem 0 .3rem; } small { color:#738278; font-size:.72rem; } .icon { color:#22d34d; opacity:.55; } .gold .icon { color:#e8b432; }
+    .stat-card { align-items:center; background:rgba(6,20,15,.86); border:1px solid rgba(255,255,255,.09); border-radius:9px; box-sizing:border-box; display:flex; justify-content:space-between; min-height:72px; overflow:hidden; padding:.7rem .85rem; position:relative; } .label { color:#c2cbc6; display:block; font-size:.67rem; font-weight:700; } strong { color:#f4f6f5; display:block; font-size:1.35rem; line-height:1; margin:.28rem 0 .16rem; } small { color:#738278; font-size:.61rem; } .icon { align-items:center; background:rgba(34,211,77,.08); border-radius:50%; color:#22d34d; display:flex; height:42px; justify-content:center; opacity:1; width:42px; } .gold .icon { background:rgba(232,180,50,.08); color:#e8b432; }
   `
 })
 export class StatCardComponent {

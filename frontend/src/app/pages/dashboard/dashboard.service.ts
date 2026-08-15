@@ -16,34 +16,40 @@ export class DashboardService {
 
   constructor(private readonly http: HttpClient, private readonly tournamentsApi: TournamentService) {}
 
-  loadOverview(): Observable<DashboardData> {
+  loadOverview(tournamentId?: number): Observable<DashboardData> {
     return this.tournamentsApi.list().pipe(
       switchMap(({ data }) => {
-        const tournament = data[0];
+        const tournament = data.find((item) => item.id === tournamentId) ?? data[0];
         if (!tournament) return of(this.previewData());
 
         return forkJoin({
           teams: this.http.get<ApiResponse<Team[]>>(`${this.apiUrl}/torneos/${tournament.id}/equipos`),
           matches: this.http.get<ApiResponse<Match[]>>(`${this.apiUrl}/torneos/${tournament.id}/partidos`)
-        }).pipe(map(({ teams, matches }) => ({ tournament, teams: teams.data, matches: matches.data, isPreview: false })));
+        }).pipe(map(({ teams, matches }) => ({ tournament, tournaments: data, teams: teams.data, matches: matches.data, isPreview: false })));
       }),
       catchError(() => of(this.previewData()))
     );
   }
 
   private previewData(): DashboardData {
-    return {
-      isPreview: true,
-      tournament: {
+    const tournament: Tournament = {
         id: 0,
         nombre: 'Copa UCSG 2026',
         deporte: 'Futbol',
         formato: 'LIGA',
+        participantes_count: 12,
+        cantidad_grupos: 1,
+        ganador_equipo_id: null,
         fecha_inicio: '2026-08-10T00:00:00',
         fecha_fin: '2026-09-20T00:00:00',
         estado: 'EN_CURSO',
         equipos_count: 12
-      },
+      };
+
+    return {
+      isPreview: true,
+      tournament,
+      tournaments: [tournament],
       teams: [
         { id: 1, nombre: 'Barcelona SC', grupo: null },
         { id: 2, nombre: 'Emelec', grupo: null },

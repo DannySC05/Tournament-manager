@@ -79,14 +79,23 @@ async function ensureEquipo(db, id, label) {
   return equipo;
 }
 
+function datePayloadValue(value) {
+  return value instanceof Date ? value.toISOString().slice(0, 10) : value;
+}
+
 function torneoPayload(body, current = {}) {
+  const formato = body.formato ?? current.formato;
+  const estado = body.estado ?? current.estado ?? "BORRADOR";
   return {
     nombre: body.nombre ?? current.nombre,
-    deporte: body.deporte ?? current.deporte,
-    formato: body.formato ?? current.formato,
-    fecha_inicio: body.fecha_inicio ?? current.fecha_inicio,
-    fecha_fin: body.fecha_fin !== undefined ? body.fecha_fin : current.fecha_fin,
-    estado: body.estado ?? current.estado ?? "BORRADOR"
+    deporte: body.deporte ?? current.deporte ?? "Futbol",
+    formato,
+    participantes_count: body.participantes_count !== undefined ? Number(body.participantes_count) : current.participantes_count,
+    cantidad_grupos: formato === "ELIMINACION" ? null : (body.cantidad_grupos !== undefined ? Number(body.cantidad_grupos) : current.cantidad_grupos),
+    fecha_inicio: body.fecha_inicio ?? datePayloadValue(current.fecha_inicio),
+    fecha_fin: body.fecha_fin !== undefined ? body.fecha_fin : datePayloadValue(current.fecha_fin),
+    estado,
+    ganador_equipo_id: estado === "FINALIZADO" ? (body.ganador_equipo_id !== undefined ? Number(body.ganador_equipo_id) : current.ganador_equipo_id) : null
   };
 }
 
@@ -132,6 +141,11 @@ async function ensureEquiposDelTorneo(db, torneoId, payload) {
   }
 }
 
+async function ensureGanadorDelTorneo(db, torneoId, winnerId) {
+  const winner = await ensureEquipo(db, winnerId, "El ganador");
+  if (winner.torneo_id !== torneoId) throw new HttpError(400, "El ganador debe pertenecer al torneo indicado.");
+}
+
 function makeRoutes() {
   return [
     route("POST", /^\/api\/auth\/register$/, async ({ db, body }) => {
@@ -172,11 +186,12 @@ function makeRoutes() {
     route("POST", /^\/api\/torneos$/, async ({ db, body, user }) => {
       requireAdmin(user);
       validateTorneoInput(body);
-      const payload = torneoPayload(body);
+      assertValid(body.estado === undefined && body.ganador_equipo_id === undefined, "El estado y la seleccion ganadora se definen despues de crear el torneo.");
+      const payload = torneoPayload({ ...body, estado: "BORRADOR", ganador_equipo_id: null });
       try {
         const { rows } = await db.query(
-          "INSERT INTO torneos (nombre, deporte, formato, fecha_inicio, fecha_fin, estado) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
-          [payload.nombre.trim(), payload.deporte.trim(), payload.formato, payload.fecha_inicio, payload.fecha_fin || null, payload.estado]
+          "INSERT INTO torneos (nombre, deporte, formato, participantes_count, cantidad_grupos, fecha_inicio, fecha_fin, estado, ganador_equipo_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
+          [payload.nombre.trim(), payload.deporte.trim(), payload.formato, payload.participantes_count, payload.cantidad_grupos, payload.fecha_inicio, payload.fecha_fin, payload.estado, payload.ganador_equipo_id]
         );
         return [201, { data: rows[0] }];
       } catch (error) {
@@ -191,10 +206,14 @@ function makeRoutes() {
       const current = await ensureTorneo(db, id);
       validateTorneoInput(body, { partial: true });
       const payload = torneoPayload(body, current);
+      validateTorneoInput(payload);
+      if (payload.estado === "FINALIZADO") await ensureGanadorDelTorneo(db, id, payload.ganador_equipo_id);
+      const { rows: teamTotals } = await db.query("SELECT COUNT(*)::int AS total FROM equipos WHERE torneo_id = $1", [id]);
+      if (teamTotals[0].total > payload.participantes_count) throw new HttpError(400, "No se puede reducir la cantidad de participantes por debajo de las selecciones ya registradas.");
       try {
         const { rows } = await db.query(
-          "UPDATE torneos SET nombre=$1, deporte=$2, formato=$3, fecha_inicio=$4, fecha_fin=$5, estado=$6, updated_at=CURRENT_TIMESTAMP WHERE id=$7 RETURNING *",
-          [payload.nombre.trim(), payload.deporte.trim(), payload.formato, payload.fecha_inicio, payload.fecha_fin || null, payload.estado, id]
+          "UPDATE torneos SET nombre=$1, deporte=$2, formato=$3, participantes_count=$4, cantidad_grupos=$5, fecha_inicio=$6, fecha_fin=$7, estado=$8, ganador_equipo_id=$9, updated_at=CURRENT_TIMESTAMP WHERE id=$10 RETURNING *",
+          [payload.nombre.trim(), payload.deporte.trim(), payload.formato, payload.participantes_count, payload.cantidad_grupos, payload.fecha_inicio, payload.fecha_fin, payload.estado, payload.ganador_equipo_id, id]
         );
         return [200, { data: rows[0] }];
       } catch (error) {
@@ -227,8 +246,10 @@ function makeRoutes() {
     route("POST", /^\/api\/torneos\/(\d+)\/equipos$/, async ({ db, body, match, user }) => {
       requireAdmin(user);
       const torneoId = parseId(match[1], "torneo_id");
-      await ensureTorneo(db, torneoId);
+      const torneo = await ensureTorneo(db, torneoId);
       validateEquipoInput(body);
+      const { rows: totals } = await db.query("SELECT COUNT(*)::int AS total FROM equipos WHERE torneo_id = $1", [torneoId]);
+      if (totals[0].total >= torneo.participantes_count) throw new HttpError(400, `Este torneo admite un maximo de ${torneo.participantes_count} selecciones.`);
       try {
         const { rows } = await db.query(
           "INSERT INTO equipos (torneo_id, nombre, grupo) VALUES ($1, $2, $3) RETURNING *",
@@ -259,7 +280,10 @@ function makeRoutes() {
     }),
     route("DELETE", /^\/api\/equipos\/(\d+)$/, async ({ db, match, user }) => {
       requireAdmin(user);
-      const result = await db.query("DELETE FROM equipos WHERE id = $1", [parseId(match[1])]);
+      const id = parseId(match[1]);
+      const { rows: tournaments } = await db.query("SELECT nombre FROM torneos WHERE ganador_equipo_id = $1 LIMIT 1", [id]);
+      if (tournaments[0]) throw new HttpError(400, `No se puede eliminar la seleccion ganadora del torneo ${tournaments[0].nombre}.`);
+      const result = await db.query("DELETE FROM equipos WHERE id = $1", [id]);
       if (!result.rowCount) throw new HttpError(404, "Equipo no encontrado.");
       return [200, { message: "Equipo eliminado." }];
     }),
