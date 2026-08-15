@@ -4,6 +4,7 @@ import { HttpError, assertValid } from "./errors.mjs";
 import { ROLES } from "./config.mjs";
 import { hashPassword, signJwt, verifyJwt, verifyPassword } from "./security.mjs";
 import { buildStandings } from "./standings.mjs";
+import { fetchCurrentFifaRanking } from "./fifa-catalog.mjs";
 import { validateEquipoInput, validatePartidoInput, validateTorneoInput, validateUserInput } from "./validators.mjs";
 
 function json(res, status, payload) {
@@ -101,7 +102,7 @@ function torneoPayload(body, current = {}) {
 
 function equipoPayload(body, current = {}) {
   return {
-    nombre: body.nombre ?? current.nombre,
+    seleccion_catalogo_id: body.seleccion_catalogo_id !== undefined ? Number(body.seleccion_catalogo_id) : current.seleccion_catalogo_id,
     grupo: body.grupo !== undefined ? body.grupo : current.grupo
   };
 }
@@ -146,6 +147,13 @@ async function ensureGanadorDelTorneo(db, torneoId, winnerId) {
   if (winner.torneo_id !== torneoId) throw new HttpError(400, "El ganador debe pertenecer al torneo indicado.");
 }
 
+async function ensureSeleccionCatalogo(db, id) {
+  const { rows } = await db.query("SELECT * FROM selecciones_catalogo WHERE id = $1 AND activo = TRUE", [id]);
+  const selection = rows[0];
+  if (!selection) throw new HttpError(400, "La seleccion elegida no existe o no esta disponible en el catalogo.");
+  return selection;
+}
+
 function makeRoutes() {
   return [
     route("POST", /^\/api\/auth\/register$/, async ({ db, body }) => {
@@ -172,6 +180,66 @@ function makeRoutes() {
     }),
     route("GET", /^\/api\/auth\/me$/, async ({ user }) => [200, { user: rowToUser(user) }]),
     route("POST", /^\/api\/auth\/logout$/, async () => [200, { message: "Logout correcto. El cliente debe descartar el token JWT." }]),
+
+    route("GET", /^\/api\/catalogo-selecciones$/, async ({ db, url }) => {
+      const search = url.searchParams.get("q")?.trim() ?? "";
+      const { rows } = await db.query(`
+        SELECT id, nombre, codigo_fifa, confederacion, escudo_url, bandera_url, ranking_fifa, ranking_puntos, ranking_actualizado_en
+        FROM selecciones_catalogo
+        WHERE activo = TRUE AND ($1 = '' OR nombre ILIKE '%' || $1 || '%' OR codigo_fifa ILIKE '%' || $1 || '%')
+        ORDER BY ranking_fifa NULLS LAST, nombre
+        LIMIT 250
+      `, [search]);
+      return [200, { data: rows }];
+    }),
+    route("POST", /^\/api\/catalogo-selecciones$/, async ({ db, body, user }) => {
+      requireAdmin(user);
+      assertValid(typeof body.nombre === "string" && body.nombre.trim().length >= 2, "El nombre de la seleccion es obligatorio.");
+      assertValid(/^[A-Za-z]{3}$/.test(String(body.codigo_fifa ?? "")), "codigo_fifa debe tener tres letras.");
+      assertValid(typeof body.confederacion === "string" && body.confederacion.trim().length >= 2, "La confederacion es obligatoria.");
+      try {
+        const { rows } = await db.query(`
+          INSERT INTO selecciones_catalogo (nombre, codigo_fifa, confederacion, escudo_url, bandera_url, ranking_fifa, ranking_puntos, ranking_actualizado_en)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *
+        `, [body.nombre.trim(), body.codigo_fifa.trim().toUpperCase(), body.confederacion.trim().toUpperCase(), body.escudo_url ?? null, body.bandera_url ?? null, body.ranking_fifa ?? null, body.ranking_puntos ?? null, body.ranking_actualizado_en ?? null]);
+        return [201, { data: rows[0] }];
+      } catch (error) {
+        if (isUniqueViolation(error)) throw new HttpError(409, "El codigo FIFA ya esta registrado en el catalogo.");
+        throw error;
+      }
+    }),
+    route("POST", /^\/api\/catalogo-selecciones\/sincronizar-ranking$/, async ({ db, user }) => {
+      requireAdmin(user);
+      let selections;
+      try {
+        selections = await fetchCurrentFifaRanking();
+      } catch (error) {
+        throw new HttpError(502, `No fue posible obtener el ranking FIFA: ${error.message}`);
+      }
+      const fieldsPerSelection = 8;
+      const placeholders = selections.map((selection, index) => {
+        const offset = index * fieldsPerSelection;
+        return `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8})`;
+      });
+      const values = selections.flatMap((selection) => [
+        selection.nombre, selection.codigo_fifa, selection.confederacion, selection.bandera_url,
+        selection.ranking_fifa, selection.ranking_puntos, selection.ranking_actualizado_en, selection.fifa_team_id
+      ]);
+      await db.query(`
+        INSERT INTO selecciones_catalogo (nombre, codigo_fifa, confederacion, bandera_url, ranking_fifa, ranking_puntos, ranking_actualizado_en, fifa_team_id)
+        VALUES ${placeholders.join(", ")}
+        ON CONFLICT (codigo_fifa) DO UPDATE SET
+          nombre = EXCLUDED.nombre,
+          confederacion = EXCLUDED.confederacion,
+          bandera_url = EXCLUDED.bandera_url,
+          ranking_fifa = EXCLUDED.ranking_fifa,
+          ranking_puntos = EXCLUDED.ranking_puntos,
+          ranking_actualizado_en = EXCLUDED.ranking_actualizado_en,
+          fifa_team_id = EXCLUDED.fifa_team_id,
+          updated_at = CURRENT_TIMESTAMP
+      `, values);
+      return [200, { message: `Catalogo FIFA actualizado con ${selections.length} selecciones.`, data: { total: selections.length } }];
+    }),
 
     route("GET", /^\/api\/torneos$/, async ({ db }) => {
       const { rows } = await db.query(`
@@ -231,7 +299,13 @@ function makeRoutes() {
     route("GET", /^\/api\/torneos\/(\d+)\/equipos$/, async ({ db, match }) => {
       const torneoId = parseId(match[1], "torneo_id");
       await ensureTorneo(db, torneoId);
-      const { rows } = await db.query("SELECT * FROM equipos WHERE torneo_id = $1 ORDER BY grupo NULLS LAST, nombre", [torneoId]);
+      const { rows } = await db.query(`
+        SELECT e.*, c.codigo_fifa, c.confederacion, c.escudo_url, c.bandera_url, c.ranking_fifa, c.ranking_actualizado_en
+        FROM equipos e
+        LEFT JOIN selecciones_catalogo c ON c.id = e.seleccion_catalogo_id
+        WHERE e.torneo_id = $1
+        ORDER BY e.grupo NULLS LAST, e.nombre
+      `, [torneoId]);
       return [200, { data: rows }];
     }),
     route("GET", /^\/api\/torneos\/(\d+)\/clasificacion$/, async ({ db, match }) => {
@@ -250,10 +324,13 @@ function makeRoutes() {
       validateEquipoInput(body);
       const { rows: totals } = await db.query("SELECT COUNT(*)::int AS total FROM equipos WHERE torneo_id = $1", [torneoId]);
       if (totals[0].total >= torneo.participantes_count) throw new HttpError(400, `Este torneo admite un maximo de ${torneo.participantes_count} selecciones.`);
+      const selection = await ensureSeleccionCatalogo(db, Number(body.seleccion_catalogo_id));
+      const { rows: registered } = await db.query("SELECT id FROM equipos WHERE torneo_id = $1 AND seleccion_catalogo_id = $2", [torneoId, selection.id]);
+      if (registered[0]) throw new HttpError(409, "Esta seleccion ya forma parte del torneo.");
       try {
         const { rows } = await db.query(
-          "INSERT INTO equipos (torneo_id, nombre, grupo) VALUES ($1, $2, $3) RETURNING *",
-          [torneoId, body.nombre.trim(), body.grupo?.trim() || null]
+          "INSERT INTO equipos (torneo_id, seleccion_catalogo_id, nombre, grupo) VALUES ($1, $2, $3, $4) RETURNING *",
+          [torneoId, selection.id, selection.nombre, body.grupo?.trim() || null]
         );
         return [201, { data: rows[0] }];
       } catch (error) {
@@ -267,10 +344,11 @@ function makeRoutes() {
       const current = await ensureEquipo(db, id, "Equipo");
       validateEquipoInput(body, { partial: true });
       const payload = equipoPayload(body, current);
+      if (payload.seleccion_catalogo_id !== current.seleccion_catalogo_id) throw new HttpError(400, "No se puede cambiar la seleccion de un equipo ya registrado.");
       try {
         const { rows } = await db.query(
-          "UPDATE equipos SET nombre=$1, grupo=$2, updated_at=CURRENT_TIMESTAMP WHERE id=$3 RETURNING *",
-          [payload.nombre.trim(), payload.grupo?.trim() || null, id]
+          "UPDATE equipos SET grupo=$1, updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING *",
+          [payload.grupo?.trim() || null, id]
         );
         return [200, { data: rows[0] }];
       } catch (error) {
@@ -358,7 +436,7 @@ export async function handleRequest(req, res) {
     const publicRoute = req.method === "POST" && ["/api/auth/register", "/api/auth/login"].includes(url.pathname);
     const user = publicRoute ? null : await getAuthUser(req, db);
     const body = ["POST", "PUT", "PATCH"].includes(req.method) ? await readJson(req) : {};
-    const [status, payload] = await found.handler({ db, user, body, match: url.pathname.match(found.pattern) });
+    const [status, payload] = await found.handler({ db, user, body, url, match: url.pathname.match(found.pattern) });
     return json(res, status, payload);
   } catch (error) {
     return json(res, error instanceof HttpError ? error.status : 500, { error: error.message ?? "Error interno", details: error.details });

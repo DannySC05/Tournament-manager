@@ -37,7 +37,9 @@ export function validateTorneoInput(body, { partial = false } = {}) {
 }
 
 export function validateEquipoInput(body, { partial = false } = {}) {
-  if (!partial || body.nombre !== undefined) requiredText(body.nombre, "nombre");
+  if (!partial || body.seleccion_catalogo_id !== undefined) {
+    assertValid(Number.isInteger(Number(body.seleccion_catalogo_id)) && Number(body.seleccion_catalogo_id) > 0, "seleccion_catalogo_id debe ser un id valido.");
+  }
   if (body.grupo !== undefined && body.grupo !== null) {
     assertValid(typeof body.grupo === "string" && body.grupo.trim().length <= 30, "El grupo debe tener hasta 30 caracteres.");
   }

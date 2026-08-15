@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
 import { environment } from '../../../environments/environment';
-import { Team, TeamPayload } from './team.models';
+import { Team, TeamPayload, TeamUpdatePayload } from './team.models';
 
 interface ApiResponse<T> {
   data: T;
@@ -22,7 +22,7 @@ export class TeamService {
     return this.http.post<ApiResponse<Team>>(`${this.apiUrl}/torneos/${tournamentId}/equipos`, payload);
   }
 
-  update(id: number, payload: TeamPayload) {
+  update(id: number, payload: TeamUpdatePayload) {
     return this.http.put<ApiResponse<Team>>(`${this.apiUrl}/equipos/${id}`, payload);
   }
 

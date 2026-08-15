@@ -53,6 +53,20 @@ try {
   expect(res.status === 201 && res.payload.user.rol === "ADMIN", "El primer usuario debe ser ADMIN.");
   const adminToken = res.payload.token;
 
+  res = await request("POST", "/api/catalogo-selecciones", {
+    token: adminToken,
+    body: { nombre: "Seleccion Azul", codigo_fifa: "AZL", confederacion: "CONMEBOL", bandera_url: "https://example.test/azl.png", ranking_fifa: 1 }
+  });
+  expect(res.status === 201, "ADMIN debe poder registrar una seleccion en el catalogo.");
+  const seleccionAzulId = res.payload.data.id;
+
+  res = await request("POST", "/api/catalogo-selecciones", {
+    token: adminToken,
+    body: { nombre: "Seleccion Roja", codigo_fifa: "ROJ", confederacion: "UEFA", bandera_url: "https://example.test/roj.png", ranking_fifa: 2 }
+  });
+  expect(res.status === 201, "El catalogo debe admitir una segunda seleccion.");
+  const seleccionRojaId = res.payload.data.id;
+
   res = await request("POST", "/api/torneos", {
     token: adminToken,
     body: {
@@ -67,15 +81,15 @@ try {
   expect(res.status === 201, "ADMIN debe crear torneos.");
   const torneoId = res.payload.data.id;
 
-  res = await request("POST", `/api/torneos/${torneoId}/equipos`, { token: adminToken, body: { nombre: "Equipo Azul", grupo: "A" } });
+  res = await request("POST", `/api/torneos/${torneoId}/equipos`, { token: adminToken, body: { seleccion_catalogo_id: seleccionAzulId, grupo: "A" } });
   expect(res.status === 201, "ADMIN debe registrar equipos.");
   const equipoAzulId = res.payload.data.id;
 
-  res = await request("POST", `/api/torneos/${torneoId}/equipos`, { token: adminToken, body: { nombre: "Equipo Rojo", grupo: "A" } });
+  res = await request("POST", `/api/torneos/${torneoId}/equipos`, { token: adminToken, body: { seleccion_catalogo_id: seleccionRojaId, grupo: "A" } });
   expect(res.status === 201, "ADMIN debe registrar un segundo equipo.");
   const equipoRojoId = res.payload.data.id;
 
-  res = await request("POST", `/api/torneos/${torneoId}/equipos`, { token: adminToken, body: { nombre: "Equipo Verde", grupo: "A" } });
+  res = await request("POST", `/api/torneos/${torneoId}/equipos`, { token: adminToken, body: { seleccion_catalogo_id: seleccionAzulId, grupo: "A" } });
   expect(res.status === 400, "No se debe superar el cupo de participantes configurado.");
 
   res = await request("PUT", `/api/torneos/${torneoId}`, { token: adminToken, body: { estado: "FINALIZADO" } });
