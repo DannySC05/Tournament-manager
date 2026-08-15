@@ -68,3 +68,25 @@ passed (build and route protection); visual session check pending normal login
 ## Final result
 
 passed
+
+---
+
+# Design QA - Dashboard Mundial de Selecciones
+
+## Alcance verificado
+
+- El dashboard conserva los servicios de torneos, equipos, partidos, clasificacion, JWT y los roles `ADMIN` / `CONSULTA`.
+- La pantalla incorpora banner HTML/CSS sin fotografia de estadio, tres indicadores, proximos partidos, tabla de posiciones, resultados y acciones rapidas solo para `ADMIN`.
+- La tabla consulta la clasificacion del torneo seleccionado y conserva un calculo local de respaldo para el modo de muestra o fallos temporales de la API.
+- Las sedes se muestran como `Por definir` hasta que el modelo de torneo reciba ese campo; no se agregaron ciudades ni paises fijos.
+- La navegacion lateral se redujo a Inicio, Torneos, Fases, Grupos y Calendario, todas conectadas a rutas existentes.
+
+## Verificaciones
+
+- `npx.cmd ng build --configuration production` finalizo correctamente.
+- La ruta `/panel` continua protegida: una sesion ausente redirige a `/acceso`.
+- La revision visual autenticada queda pendiente de abrir una sesion normal en el navegador; no se alteraron guardias ni se crearon credenciales de prueba para forzarla.
+
+## Final result
+
+passed (compilacion y proteccion de rutas); captura autenticada pendiente

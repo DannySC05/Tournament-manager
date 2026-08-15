@@ -1,10 +1,10 @@
 <div class="teams-shell">
-  <app-dashboard-sidebar [open]="menuOpen()" (logout)="auth.logout()" />
+  <app-dashboard-sidebar [open]="menuOpen()" [userName]="auth.user()?.nombre ?? 'Usuario'" [role]="auth.user()?.rol ?? 'CONSULTA'" (logout)="auth.logout()" />
   @if (menuOpen()) { <button class="menu-backdrop" type="button" aria-label="Cerrar menú" (click)="closeMenu()"></button> }
 
   <div class="teams-workspace">
     <app-dashboard-topbar
-      [tournamentName]="selectedTournament()?.nombre ?? 'Equipos'"
+      [tournamentName]="selectedTournament()?.nombre ?? 'Selecciones'"
       [userName]="auth.user()?.nombre ?? 'Usuario'"
       [role]="auth.user()?.rol ?? 'CONSULTA'"
       [menuOpen]="menuOpen()"
@@ -12,8 +12,8 @@
 
     <main class="teams-content">
       <section class="page-header">
-        <div><p class="section-kicker">ADMINISTRACIÓN</p><h1>Equipos</h1><p>Registra y organiza los participantes de cada torneo.</p></div>
-        @if (auth.isAdmin() && selectedTournament()) { <button class="create-button" type="button" (click)="openCreate()"><svg lucidePlus width="18" height="18" /> Agregar equipo</button> }
+        <div><p class="section-kicker">GESTIÓN MUNDIAL</p><h1>Selecciones</h1><p>Registra y organiza los países participantes de cada mundial.</p></div>
+        @if (auth.isAdmin() && selectedTournament()) { <button class="create-button" type="button" (click)="openCreate()"><svg lucidePlus width="18" height="18" /> Agregar selección</button> }
       </section>
 
       @if (error()) { <p class="feedback error" role="alert">{{ error() }}</p> }
@@ -26,7 +26,7 @@
         <section class="selector-card"><div><span class="selector-label">TORNEO SELECCIONADO</span><strong>{{ selectedTournament()?.nombre }}</strong><small>{{ selectedTournament()?.deporte }} · {{ selectedTournament()?.formato }}</small></div><label class="tournament-select"><span>Ver torneo</span><select [value]="selectedTournamentId()" (change)="changeTournament($any($event.target).value)">@for (tournament of tournaments(); track tournament.id) { <option [value]="tournament.id">{{ tournament.nombre }}</option> }</select></label></section>
 
         <section class="teams-card" aria-labelledby="teams-list-title">
-          <div class="list-toolbar"><div><h2 id="teams-list-title">Participantes</h2><span>{{ teams().length }} equipos registrados</span></div><label class="search"><svg lucideSearch width="17" height="17" /><input type="search" placeholder="Buscar equipo" [value]="query()" (input)="setQuery($any($event.target).value)" /></label></div>
+          <div class="list-toolbar"><div><h2 id="teams-list-title">Selecciones participantes</h2><span>{{ teams().length }} selecciones registradas</span></div><label class="search"><svg lucideSearch width="17" height="17" /><input type="search" placeholder="Buscar selección" [value]="query()" (input)="setQuery($any($event.target).value)" /></label></div>
           @if (loadingTeams()) {
             <div class="loading-state"><span></span> Cargando equipos...</div>
           } @else if (!visibleTeams().length && !teams().length) {

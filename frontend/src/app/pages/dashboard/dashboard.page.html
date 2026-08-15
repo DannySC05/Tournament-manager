@@ -1,81 +1,28 @@
 <div class="dashboard-shell">
-  <app-dashboard-sidebar [open]="menuOpen()" (logout)="auth.logout()" />
-  @if (menuOpen()) {
-    <button class="menu-backdrop" type="button" aria-label="Cerrar menu" (click)="closeMenu()"></button>
-  }
+  <app-dashboard-sidebar [open]="menuOpen()" [userName]="auth.user()?.nombre ?? 'Usuario'" [role]="auth.user()?.rol ?? 'CONSULTA'" (logout)="auth.logout()" />
+  @if (menuOpen()) { <button class="menu-backdrop" type="button" aria-label="Cerrar menu" (click)="closeMenu()"></button> }
 
   <div class="dashboard-workspace">
     @if (currentTournament(); as tournament) {
-      <app-dashboard-topbar
-        [tournamentName]="tournament.nombre"
-        [userName]="auth.user()?.nombre ?? 'Usuario'"
-        [role]="auth.user()?.rol ?? 'CONSULTA'"
-        [menuOpen]="menuOpen()"
-        (menuToggle)="toggleMenu()" />
-
+      <app-dashboard-topbar [tournamentName]="tournament.nombre" [userName]="auth.user()?.nombre ?? 'Usuario'" [role]="auth.user()?.rol ?? 'CONSULTA'" [menuOpen]="menuOpen()" (menuToggle)="toggleMenu()" />
       <main class="dashboard-content">
-        <section class="tournament-header" aria-labelledby="tournament-title">
-          <div>
-            <p class="section-kicker">TORNEO ACTUAL</p>
-            <div class="title-row"><h1 id="tournament-title">{{ tournament.nombre }}</h1><app-status-badge [status]="tournament.estado" [label]="formatTournamentStatus(tournament.estado)" /></div>
-            <p class="tournament-meta">{{ tournament.deporte }} <span aria-hidden="true">·</span> {{ tournament.formato | titlecase }}</p>
-            <p class="date-range">{{ dateRange() }}</p>
-          </div>
+        <app-world-cup-banner [tournament]="tournament" [phase]="currentPhase()" [durationDays]="durationDays()" [dateRange]="dateRange()" [statusLabel]="formatTournamentStatus(tournament.estado)" />
+
+        <section class="stats-grid" aria-label="Resumen del mundial">
+          @for (stat of stats(); track stat.label) { <app-stat-card [icon]="stat.icon" [value]="stat.value" [label]="stat.label" [detail]="stat.detail" [tone]="stat.tone" /> }
+        </section>
+
+        <section class="dashboard-grid" aria-label="Actividad del mundial">
+          <app-upcoming-matches [matches]="upcomingMatches()" (openCalendar)="openModule('partidos')" />
+          <app-dashboard-standings [groups]="standings()" (openFullTable)="openModule('clasificacion')" />
+          <app-recent-results [matches]="recentMatches()" (openResults)="openModule('resultados')" />
           @if (auth.isAdmin()) {
-            <div class="admin-actions">
-              <button class="button secondary" type="button" (click)="openModule('equipos')"><span aria-hidden="true">+</span> Agregar equipo</button>
-              <button class="button primary" type="button" (click)="openModule('partidos')"><span aria-hidden="true">+</span> Programar partido</button>
-            </div>
+            <app-quick-actions class="quick-actions-slot" (newTournament)="openModule('torneos')" (newTeam)="openModule('equipos')" (newMatch)="openModule('partidos')" (generateReport)="openModule('resultados')" />
           }
-        </section>
-
-        <section class="stats-grid" aria-label="Resumen del torneo">
-          @for (stat of stats(); track stat.label) {
-            <app-stat-card [icon]="stat.icon" [value]="stat.value" [label]="stat.label" />
-          }
-        </section>
-
-        @if (nextMatch(); as match) {
-          <section class="next-match-card" aria-labelledby="next-match-title">
-            <div class="next-match-head"><p id="next-match-title">PRÓXIMO PARTIDO</p><app-status-badge [status]="match.estado" [label]="formatMatchStatus(match.estado)" /></div>
-            <div class="teams-line"><strong>{{ match.equipo_local }}</strong><span>VS</span><strong>{{ match.equipo_visitante }}</strong></div>
-            <div class="match-details"><span>{{ matchDay(match.fecha) }} <b aria-hidden="true">·</b> {{ matchTime(match.fecha) }}</span><span>{{ match.sede }}</span></div>
-            <button class="detail-link prominent" type="button" (click)="openModule('partidos')">Ver partido <span aria-hidden="true">→</span></button>
-          </section>
-        }
-
-        <section class="summary-grid">
-          <article class="content-card upcoming-card">
-            <div class="card-heading"><h2>Próximos partidos</h2><button class="detail-link" type="button" (click)="openModule('partidos')">Ver calendario <span aria-hidden="true">→</span></button></div>
-            <div class="match-list">
-              @for (match of upcomingMatches(); track trackByMatch($index, match)) {
-                <div class="match-row"><span class="match-date">{{ matchDay(match.fecha) }}</span><span class="match-time">{{ matchTime(match.fecha) }}</span><span class="match-teams">{{ match.equipo_local }} <b>vs</b> {{ match.equipo_visitante }}</span><app-status-badge [status]="match.estado" [label]="formatMatchStatus(match.estado)" /></div>
-              } @empty { <p class="empty-copy">No hay partidos pendientes.</p> }
-            </div>
-          </article>
-
-          <article class="content-card results-card">
-            <div class="card-heading"><h2>Resultados recientes</h2><button class="detail-link" type="button" (click)="openModule('resultados')">Ver resultados <span aria-hidden="true">→</span></button></div>
-            <div class="result-list">
-              @for (match of recentMatches(); track trackByMatch($index, match)) {
-                <div class="result-row"><span>{{ match.equipo_local }}</span><strong>{{ match.marcador_local }} - {{ match.marcador_visitante }}</strong><span>{{ match.equipo_visitante }}</span><app-status-badge [status]="match.estado" [label]="formatMatchStatus(match.estado)" /></div>
-              } @empty { <p class="empty-copy">Aún no hay resultados.</p> }
-            </div>
-          </article>
-
-          <article class="content-card teams-card">
-            <div class="card-heading"><h2>Equipos</h2><button class="detail-link" type="button" (click)="openModule('equipos')">Ver todos <span aria-hidden="true">→</span></button></div>
-            <div class="team-list">
-              @for (team of teams().slice(0, 4); track team.id) {
-                <div class="team-row"><span class="team-code">{{ teamCode(team.nombre) }}</span><span>{{ team.nombre }}</span></div>
-              } @empty { <p class="empty-copy">Aún no hay equipos.</p> }
-            </div>
-            @if (teams().length > 4) { <button class="more-teams" type="button" (click)="openModule('equipos')">+{{ teams().length - 4 }} equipos</button> }
-          </article>
         </section>
       </main>
     } @else if (loading()) {
-      <main class="loading-state"><span></span> Cargando resumen del torneo...</main>
+      <main class="loading-state"><span></span>Cargando resumen del mundial...</main>
     }
   </div>
 </div>

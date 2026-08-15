@@ -1,10 +1,10 @@
 <div class="tournaments-shell">
-  <app-dashboard-sidebar [open]="menuOpen()" (logout)="auth.logout()" />
+  <app-dashboard-sidebar [open]="menuOpen()" [userName]="auth.user()?.nombre ?? 'Usuario'" [role]="auth.user()?.rol ?? 'CONSULTA'" (logout)="auth.logout()" />
   @if (menuOpen()) { <button class="menu-backdrop" type="button" aria-label="Cerrar menú" (click)="closeMenu()"></button> }
 
   <div class="tournaments-workspace">
     <app-dashboard-topbar
-      tournamentName="Torneos"
+      tournamentName="Mundiales"
       [userName]="auth.user()?.nombre ?? 'Usuario'"
       [role]="auth.user()?.rol ?? 'CONSULTA'"
       [menuOpen]="menuOpen()"
@@ -12,23 +12,23 @@
 
     <main class="tournaments-content">
       <section class="page-header">
-        <div><p class="section-kicker">ADMINISTRACIÓN</p><h1>Torneos</h1><p>Gestiona las competencias y define el contexto de equipos, partidos y resultados.</p></div>
-        @if (auth.isAdmin()) { <button class="create-button" type="button" (click)="openCreate()"><svg lucidePlus width="18" height="18" /> Crear torneo</button> }
+        <div><p class="section-kicker">GESTIÓN MUNDIAL</p><h1>Mundiales</h1><p>Define cada edición, sus selecciones, encuentros, resultados y fases de competencia.</p></div>
+        @if (auth.isAdmin()) { <button class="create-button" type="button" (click)="openCreate()"><svg lucidePlus width="18" height="18" /> Crear mundial</button> }
       </section>
 
       @if (error()) { <p class="feedback error" role="alert">{{ error() }}</p> }
 
       <section class="tournaments-card" aria-labelledby="list-title">
-        <div class="list-toolbar"><div><h2 id="list-title">Todos los torneos</h2><span>{{ tournaments().length }} registrados</span></div><label class="search"><svg lucideSearch width="17" height="17" /><input type="search" placeholder="Buscar torneo" [value]="query()" (input)="setQuery($any($event.target).value)" /></label></div>
+        <div class="list-toolbar"><div><h2 id="list-title">Todos los mundiales</h2><span>{{ tournaments().length }} registrados</span></div><label class="search"><svg lucideSearch width="17" height="17" /><input type="search" placeholder="Buscar mundial" [value]="query()" (input)="setQuery($any($event.target).value)" /></label></div>
 
         @if (loading()) {
           <div class="loading-state"><span></span> Cargando torneos...</div>
         } @else if (!visibleTournaments().length && !tournaments().length) {
-          <div class="empty-state"><span class="empty-icon"><svg lucideTrophy width="24" height="24" /></span><h2>Aún no hay torneos</h2><p>Cuando crees un torneo podrás registrar sus equipos y programar sus partidos.</p>@if (auth.isAdmin()) { <button class="text-button" type="button" (click)="openCreate()">Crear el primer torneo</button> }</div>
+          <div class="empty-state"><span class="empty-icon"><svg lucideTrophy width="24" height="24" /></span><h2>Aún no hay mundiales</h2><p>Cuando crees un mundial podrás registrar sus selecciones y programar sus encuentros.</p>@if (auth.isAdmin()) { <button class="text-button" type="button" (click)="openCreate()">Crear el primer mundial</button> }</div>
         } @else if (!visibleTournaments().length) {
           <div class="empty-state compact"><h2>Sin coincidencias</h2><p>Prueba con otro nombre, deporte o estado.</p></div>
         } @else {
-          <div class="table-wrap"><table><thead><tr><th>Torneo</th><th>Formato</th><th>Fechas</th><th>Equipos</th><th>Estado</th>@if (auth.isAdmin()) { <th><span class="visually-hidden">Acciones</span></th> }</tr></thead><tbody>@for (tournament of visibleTournaments(); track tournament.id) { <tr><td><strong>{{ tournament.nombre }}</strong><small>{{ tournament.deporte }}</small></td><td>{{ formatFormat(tournament.formato) }}</td><td><span>{{ formatDate(tournament.fecha_inicio) }}</span><small>hasta {{ formatDate(tournament.fecha_fin) }}</small></td><td>{{ tournament.equipos_count ?? 0 }}</td><td><app-status-badge [status]="tournament.estado" [label]="formatStatus(tournament.estado)" /></td>@if (auth.isAdmin()) { <td class="row-actions"><button type="button" title="Editar torneo" aria-label="Editar {{ tournament.nombre }}" (click)="openEdit(tournament)"><svg lucidePencil width="16" height="16" /></button><button class="delete" type="button" title="Eliminar torneo" aria-label="Eliminar {{ tournament.nombre }}" (click)="confirmDelete(tournament)"><svg lucideTrash2 width="16" height="16" /></button></td> }</tr> }</tbody></table></div>
+          <div class="table-wrap"><table><thead><tr><th>Mundial</th><th>Formato</th><th>Fechas</th><th>Selecciones</th><th>Estado</th>@if (auth.isAdmin()) { <th><span class="visually-hidden">Acciones</span></th> }</tr></thead><tbody>@for (tournament of visibleTournaments(); track tournament.id) { <tr><td><strong>{{ tournament.nombre }}</strong><small>{{ tournament.deporte }}</small></td><td>{{ formatFormat(tournament.formato) }}</td><td><span>{{ formatDate(tournament.fecha_inicio) }}</span><small>hasta {{ formatDate(tournament.fecha_fin) }}</small></td><td>{{ tournament.equipos_count ?? 0 }}</td><td><app-status-badge [status]="tournament.estado" [label]="formatStatus(tournament.estado)" /></td>@if (auth.isAdmin()) { <td class="row-actions"><button type="button" title="Editar mundial" aria-label="Editar {{ tournament.nombre }}" (click)="openEdit(tournament)"><svg lucidePencil width="16" height="16" /></button><button class="delete" type="button" title="Eliminar mundial" aria-label="Eliminar {{ tournament.nombre }}" (click)="confirmDelete(tournament)"><svg lucideTrash2 width="16" height="16" /></button></td> }</tr> }</tbody></table></div>
         }
       </section>
     </main>

@@ -1,4 +1,84 @@
-:root { color: #17242d; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-synthesis: none; }
+:root {
+  --world-forest: #030e0a;
+  --world-deep-green: #07140f;
+  --world-emerald: #22d34d;
+  --world-emerald-bright: #72e68c;
+  --world-gold: #e8b432;
+  --world-shell: #020b08;
+  --world-surface: #07140f;
+  --world-border: rgba(255, 255, 255, .10);
+  --world-ink: #f4f6f5;
+  --world-muted: #9fa8a3;
+  color: var(--world-ink);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+}
+
 * { box-sizing: border-box; }
-body { background: #f7f9fa; margin: 0; }
-button, input, select { font: inherit; }
+body { background:var(--world-shell); margin:0; }
+button, input, select { font:inherit; }
+
+/* Tema compartido para los modulos administrativos que conservan estilos encapsulados. */
+body .tournaments-shell,
+body .teams-shell,
+body .matches-shell,
+body .results-shell,
+body .standings-shell { background:var(--world-shell) !important; color:var(--world-ink); }
+
+body .section-kicker { color:var(--world-gold) !important; letter-spacing:.08em !important; }
+body .page-header > div > p:not(.section-kicker),
+body .list-toolbar span,
+body .selector-card small,
+body .empty-state p,
+body .format-state p,
+body .table-note { color:var(--world-muted) !important; }
+
+body .tournaments-card,
+body .teams-card,
+body .matches-card,
+body .results-card,
+body .standings-card,
+body .pending-match,
+body .format-state { background:rgba(6,20,15,.86) !important; border-color:var(--world-border) !important; color:var(--world-ink) !important; box-shadow:none !important; }
+
+body .selector-card,
+body .all-done { background:#0a1913 !important; border-color:rgba(34,211,77,.25) !important; border-left-color:var(--world-gold) !important; color:var(--world-ink) !important; }
+body .selector-label,
+body .text-button,
+body .pending-footer button { color:var(--world-emerald-bright) !important; }
+
+body .create-button,
+body .save-button { background:var(--world-emerald) !important; border-color:var(--world-emerald) !important; color:#03220d !important; }
+body .create-button:hover,
+body .save-button:hover { background:var(--world-emerald-bright) !important; border-color:var(--world-emerald-bright) !important; }
+body .cancel-button { background:#0a1913 !important; border-color:var(--world-border) !important; color:#d4ddd7 !important; }
+
+body .search,
+body .filter-select,
+body .date-filter,
+body .tournament-select { background:#0a1913 !important; border-color:rgba(255,255,255,.12) !important; color:#d9e2dc !important; }
+body .search input,
+body .filter-select select,
+body .tournament-select select,
+body .form-dialog input,
+body .form-dialog select,
+body .score-form input { background:#0a1913 !important; border-color:rgba(255,255,255,.14) !important; color:#f4f6f5 !important; outline-color:var(--world-emerald) !important; }
+body th { background:#0a1913 !important; border-color:var(--world-border) !important; color:#9fa8a3 !important; }
+body td,
+body .match-row,
+body .result-row,
+body .team-row,
+body .pending-footer,
+body .group-tabs,
+body .group-table + .group-table,
+body .table-note { border-color:rgba(255,255,255,.08) !important; color:#d5ddd8 !important; }
+body .leader { background:rgba(34,211,77,.06) !important; }
+body .leader .position,
+body .group-tabs button.active { background:rgba(34,211,77,.12) !important; border-color:rgba(34,211,77,.35) !important; color:#72e68c !important; }
+body .points { color:#72e68c !important; }
+
+body .empty-icon,
+body .format-icon { background:rgba(34,211,77,.10) !important; color:var(--world-emerald-bright) !important; }
+body .form-dialog,
+body .confirm-dialog { background:#07140f !important; border-color:var(--world-border) !important; box-shadow:0 24px 54px rgba(0,0,0,.45) !important; color:var(--world-ink) !important; }
+body .modal-layer { background:rgba(0,0,0,.68) !important; }

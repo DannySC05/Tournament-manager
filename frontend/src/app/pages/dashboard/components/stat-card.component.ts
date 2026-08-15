@@ -1,20 +1,23 @@
 import { Component, input } from '@angular/core';
-import { LucideCalendarDays, LucideCircleDot, LucideMedal, LucideUsersRound } from '@lucide/angular';
+import { LucideCalendarDays, LucideMedal, LucideUsersRound } from '@lucide/angular';
 
 @Component({
   selector: 'app-stat-card',
-  imports: [LucideCalendarDays, LucideCircleDot, LucideMedal, LucideUsersRound],
+  imports: [LucideCalendarDays, LucideMedal, LucideUsersRound],
   template: `
-    <article class="stat-card"><span class="icon-shell">@switch (icon()) { @case ('users') { <svg lucideUsersRound width="18" height="18" /> } @case ('calendar') { <svg lucideCalendarDays width="18" height="18" /> } @case ('live') { <svg lucideCircleDot width="18" height="18" /> } @default { <svg lucideMedal width="18" height="18" /> } }</span><div><strong>{{ value() }}</strong><span>{{ label() }}</span></div></article>
+    <article class="stat-card" [class.gold]="tone() === 'gold'">
+      <div><span class="label">{{ label() }}</span><strong>{{ value() }}</strong><small>{{ detail() }}</small></div>
+      <span class="icon" aria-hidden="true">@switch (icon()) { @case ('users') { <svg lucideUsersRound width="33" height="33" /> } @case ('calendar') { <svg lucideCalendarDays width="33" height="33" /> } @default { <svg lucideMedal width="33" height="33" /> } }</span>
+    </article>
   `,
   styles: `
-    .stat-card { align-items:center; background:#fff; border:1px solid #e3e8e5; border-radius:10px; display:flex; gap:.75rem; min-height:88px; padding:1rem; }
-    .icon-shell { align-items:center; background:#edf8f0; border-radius:8px; color:#179447; display:flex; height:36px; justify-content:center; width:36px; }
-    strong { color:#18201c; display:block; font-size:1.45rem; line-height:1.05; } span:not(.icon-shell) { color:#66706a; display:block; font-size:.78rem; margin-top:.18rem; }
+    .stat-card { align-items:center; background:rgba(6,20,15,.86); border:1px solid rgba(255,255,255,.09); border-radius:14px; box-sizing:border-box; display:flex; justify-content:space-between; min-height:124px; overflow:hidden; padding:1.15rem 1.25rem; position:relative; } .label { color:#9fa8a3; display:block; font-size:.78rem; font-weight:700; } strong { color:#f4f6f5; display:block; font-size:2rem; line-height:1; margin:.5rem 0 .3rem; } small { color:#738278; font-size:.72rem; } .icon { color:#22d34d; opacity:.55; } .gold .icon { color:#e8b432; }
   `
 })
 export class StatCardComponent {
-  readonly icon = input.required<'users' | 'calendar' | 'live' | 'medal'>();
+  readonly icon = input.required<'users' | 'calendar' | 'medal'>();
   readonly value = input.required<number>();
   readonly label = input.required<string>();
+  readonly detail = input.required<string>();
+  readonly tone = input<'green' | 'gold'>('green');
 }

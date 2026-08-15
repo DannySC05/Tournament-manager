@@ -1,39 +1,48 @@
 import { Component, input, output } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { LucideCalendarDays, LucideHome, LucideLogOut, LucideMedal, LucideSettings, LucideTable2, LucideTrophy, LucideUsersRound } from '@lucide/angular';
+import { LucideCalendarDays, LucideHome, LucideLogOut, LucideMedal, LucideTable2, LucideTrophy } from '@lucide/angular';
 
 @Component({
   selector: 'app-dashboard-sidebar',
-  imports: [RouterLink, RouterLinkActive, LucideCalendarDays, LucideHome, LucideLogOut, LucideMedal, LucideSettings, LucideTable2, LucideTrophy, LucideUsersRound],
+  imports: [RouterLink, RouterLinkActive, LucideCalendarDays, LucideHome, LucideLogOut, LucideMedal, LucideTable2, LucideTrophy],
   template: `
     <aside class="sidebar" [class.open]="open()">
-      <a class="brand" routerLink="/panel"><span class="brand-mark"><svg lucideTrophy width="18" height="18" /></span><span class="brand-copy">Administra <strong>torneos</strong></span></a>
+      <a class="brand" routerLink="/panel" aria-label="Inicio del Mundial de Selecciones">
+        <span class="brand-mark"><svg lucideTrophy width="19" height="19" /></span>
+        <span class="brand-copy"><strong>MUNDIAL</strong><small>DE SELECCIONES</small></span>
+      </a>
+
       <nav aria-label="Navegacion principal">
         <a routerLink="/panel" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"><svg lucideHome width="19" height="19" /><span>Inicio</span></a>
+        <p class="nav-section">COMPETENCIAS</p>
         <a routerLink="/modulos/torneos" routerLinkActive="active"><svg lucideTrophy width="19" height="19" /><span>Torneos</span></a>
-        <a routerLink="/modulos/equipos" routerLinkActive="active"><svg lucideUsersRound width="19" height="19" /><span>Equipos</span></a>
-        <a routerLink="/modulos/partidos" routerLinkActive="active"><svg lucideCalendarDays width="19" height="19" /><span>Partidos</span></a>
-        <a routerLink="/modulos/resultados" routerLinkActive="active"><svg lucideMedal width="19" height="19" /><span>Resultados</span></a>
-        <a routerLink="/modulos/clasificacion" routerLinkActive="active"><svg lucideTable2 width="19" height="19" /><span>Clasificación</span></a>
+        <a routerLink="/modulos/resultados" routerLinkActive="active"><svg lucideMedal width="19" height="19" /><span>Fases</span></a>
+        <a routerLink="/modulos/clasificacion" routerLinkActive="active"><svg lucideTable2 width="19" height="19" /><span>Grupos</span></a>
+        <a routerLink="/modulos/partidos" routerLinkActive="active"><svg lucideCalendarDays width="19" height="19" /><span>Calendario</span></a>
       </nav>
+
       <div class="sidebar-footer">
-        <a routerLink="/modulos/configuracion"><svg lucideSettings width="19" height="19" /><span>Configuracion</span></a>
+        <div class="admin-summary"><span class="avatar">{{ initials() }}</span><span><strong>{{ userName() }}</strong><small><i aria-hidden="true"></i>{{ role() === 'ADMIN' ? 'Administrador' : 'Consulta' }}</small></span></div>
         <button type="button" (click)="logout.emit()"><svg lucideLogOut width="19" height="19" /><span>Cerrar sesion</span></button>
       </div>
     </aside>
   `,
   styles: `
-    .sidebar { background:#fff; border-right:1px solid #e3e8e5; display:flex; flex-direction:column; height:100vh; left:0; padding:1.35rem .85rem; position:fixed; top:0; width:244px; z-index:20; }
-    .brand { align-items:center; color:#18201c; display:flex; font-size:1rem; font-weight:700; gap:.65rem; min-height:42px; padding:0 .45rem; text-decoration:none; } .brand strong { color:#179447; }
-    .brand-mark { align-items:center; background:#179447; border-radius:9px; color:#fff; display:flex; height:30px; justify-content:center; width:30px; }
-    nav { display:grid; gap:.28rem; margin-top:2.25rem; } nav a, .sidebar-footer a, .sidebar-footer button { align-items:center; background:transparent; border:0; border-radius:8px; color:#66706a; cursor:pointer; display:flex; font-size:.88rem; font-weight:600; gap:.78rem; min-height:42px; padding:0 .72rem; position:relative; text-align:left; text-decoration:none; width:100%; }
-    nav a:hover, .sidebar-footer a:hover, .sidebar-footer button:hover { background:#f4f8f5; color:#0f6935; } nav a.active { background:#ebf7ee; color:#0f6935; } nav a.active::before { background:#179447; border-radius:0 4px 4px 0; content:''; height:23px; left:-.85rem; position:absolute; width:3px; }
-    .sidebar-footer { border-top:1px solid #edf0ee; display:grid; gap:.25rem; margin-top:auto; padding-top:1rem; }
-    @media (max-width: 1050px) and (min-width: 701px) { .sidebar { align-items:center; padding:.95rem .45rem; width:66px; } .brand-copy, nav span, .sidebar-footer span { display:none; } .brand { padding:0; } nav, .sidebar-footer { width:100%; } nav a, .sidebar-footer a, .sidebar-footer button { justify-content:center; padding:0; } nav a.active::before { left:-.45rem; } }
-    @media (max-width: 700px) { .sidebar { box-shadow:0 20px 50px rgba(24,32,28,.16); transform:translateX(-100%); transition:transform .2s ease; width:244px; } .sidebar.open { transform:translateX(0); } }
+    .sidebar { background:rgba(3,14,10,.98); border-right:1px solid rgba(255,255,255,.09); box-sizing:border-box; display:flex; flex-direction:column; height:100vh; left:0; padding:1.35rem .85rem; position:fixed; top:0; width:250px; z-index:20; }
+    .brand { align-items:center; color:#f4f6f5; display:flex; gap:.68rem; min-height:45px; padding:0 .45rem; text-decoration:none; } .brand-mark { align-items:center; background:#e8b432; border-radius:9px; color:#061a10; display:flex; height:33px; justify-content:center; width:33px; } .brand-copy { display:grid; line-height:1; } .brand-copy strong { font-size:.78rem; letter-spacing:.12em; } .brand-copy small { color:#e8b432; font-size:.59rem; font-weight:800; letter-spacing:.1em; margin-top:.33rem; }
+    nav { display:grid; gap:.25rem; margin-top:2.1rem; } nav a, .sidebar-footer button { align-items:center; background:transparent; border:0; border-radius:9px; color:#9fa8a3; cursor:pointer; display:flex; font:600 .86rem/1 inherit; gap:.78rem; min-height:42px; padding:0 .72rem; position:relative; text-align:left; text-decoration:none; width:100%; } nav a:hover, .sidebar-footer button:hover { background:rgba(34,211,77,.1); color:#f4f6f5; } nav a.active { background:#127a32; color:#fff; } .nav-section { color:#6e8277; font-size:.63rem; font-weight:850; letter-spacing:.11em; margin:1.15rem .72rem .35rem; }
+    .sidebar-footer { border-top:1px solid rgba(255,255,255,.09); display:grid; gap:.75rem; margin-top:auto; padding:.95rem .35rem 0; } .admin-summary { align-items:center; display:flex; gap:.58rem; min-width:0; } .avatar { align-items:center; background:#163d29; border:1px solid rgba(232,180,50,.35); border-radius:50%; color:#e8b432; display:flex; flex:0 0 auto; font-size:.68rem; font-weight:850; height:29px; justify-content:center; width:29px; } .admin-summary span:last-child { display:grid; min-width:0; } .admin-summary strong { color:#e5eae7; font-size:.76rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .admin-summary small { align-items:center; color:#839088; display:flex; font-size:.66rem; gap:.32rem; margin-top:.16rem; } .admin-summary i { background:#22d34d; border-radius:50%; height:5px; width:5px; }
+    @media (max-width:1050px) and (min-width:701px) { .sidebar { align-items:center; padding:.95rem .45rem; width:66px; } .brand-copy, nav span, .nav-section, .admin-summary span:last-child, .sidebar-footer button span { display:none; } .brand { padding:0; } nav, .sidebar-footer { width:100%; } nav a, .sidebar-footer button { justify-content:center; padding:0; } .sidebar-footer { padding-left:0; padding-right:0; } .admin-summary { justify-content:center; } }
+    @media (max-width:700px) { .sidebar { box-shadow:20px 0 50px rgba(0,0,0,.35); transform:translateX(-100%); transition:transform .2s ease; } .sidebar.open { transform:translateX(0); } }
   `
 })
 export class DashboardSidebarComponent {
   readonly open = input(false);
+  readonly userName = input('Usuario');
+  readonly role = input<'ADMIN' | 'CONSULTA'>('CONSULTA');
   readonly logout = output<void>();
+
+  protected initials(): string {
+    return this.userName().split(' ').filter(Boolean).slice(0, 2).map((name) => name[0]).join('').toUpperCase() || 'U';
+  }
 }

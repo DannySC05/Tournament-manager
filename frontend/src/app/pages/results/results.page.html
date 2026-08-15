@@ -1,5 +1,5 @@
 <div class="results-shell">
-  <app-dashboard-sidebar [open]="menuOpen()" (logout)="auth.logout()" />
+  <app-dashboard-sidebar [open]="menuOpen()" [userName]="auth.user()?.nombre ?? 'Usuario'" [role]="auth.user()?.rol ?? 'CONSULTA'" (logout)="auth.logout()" />
   @if (menuOpen()) { <button class="menu-backdrop" type="button" aria-label="Cerrar menú" (click)="closeMenu()"></button> }
 
   <div class="results-workspace">

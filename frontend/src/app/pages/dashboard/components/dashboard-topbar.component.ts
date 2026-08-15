@@ -1,22 +1,25 @@
 import { Component, input, output } from '@angular/core';
-import { LucideBell, LucideChevronDown, LucideMenu, LucideX } from '@lucide/angular';
+import { LucideBell, LucideCalendarDays, LucideMenu, LucideUserRound, LucideX } from '@lucide/angular';
 
 @Component({
   selector: 'app-dashboard-topbar',
-  imports: [LucideBell, LucideChevronDown, LucideMenu, LucideX],
+  imports: [LucideBell, LucideCalendarDays, LucideMenu, LucideUserRound, LucideX],
   template: `
     <header class="topbar">
-      <button class="menu-button" type="button" [attr.aria-label]="menuOpen() ? 'Cerrar menu' : 'Abrir menu'" (click)="menuToggle.emit()">@if (menuOpen()) { <svg lucideX width="21" height="21" /> } @else { <svg lucideMenu width="21" height="21" /> }</button>
-      <button class="tournament-switcher" type="button">{{ tournamentName() }}<svg lucideChevronDown width="17" height="17" /></button>
-      <div class="profile-area"><button class="notification-button" type="button" aria-label="Notificaciones"><svg lucideBell width="19" height="19" /><span></span></button><div class="role">{{ role() === 'ADMIN' ? 'Administrador' : 'Consulta' }}</div><div class="identity"><span>{{ userName() }}</span><small>{{ role() === 'ADMIN' ? 'Administrador' : 'Consulta' }}</small></div><span class="avatar">{{ initials() }}</span></div>
+      <button class="menu-button" type="button" [attr.aria-label]="menuOpen() ? 'Cerrar menu' : 'Abrir menu'" (click)="menuToggle.emit()">
+        @if (menuOpen()) { <svg lucideX width="20" height="20" /> } @else { <svg lucideMenu width="20" height="20" /> }
+      </button>
+      <div class="greeting"><strong>Hola, {{ userName() }} <span aria-hidden="true">&#128075;</span></strong><p>Bienvenido al sistema de gestion de mundiales de selecciones.</p></div>
+      <div class="profile-area" aria-label="Acciones de usuario">
+        <button type="button" title="Notificaciones" aria-label="Notificaciones"><svg lucideBell width="18" height="18" /><i aria-hidden="true"></i></button>
+        <button type="button" title="Calendario" aria-label="Calendario"><svg lucideCalendarDays width="18" height="18" /></button>
+        <button class="profile-button" type="button" title="Perfil" aria-label="Perfil"><svg lucideUserRound width="18" height="18" /><span>{{ initials() }}</span></button>
+      </div>
     </header>
   `,
   styles: `
-    .topbar { align-items:center; background:#fff; border-bottom:1px solid #e3e8e5; display:flex; height:68px; justify-content:space-between; padding:0 2rem; }
-    button { font:inherit; } .tournament-switcher { align-items:center; background:#f7f9f8; border:1px solid #e8ecea; border-radius:8px; color:#18201c; cursor:pointer; display:inline-flex; font-size:.88rem; font-weight:700; gap:.42rem; min-height:37px; padding:0 .7rem; }
-    .profile-area { align-items:center; display:flex; gap:.8rem; } .notification-button, .menu-button { align-items:center; background:transparent; border:0; color:#4e5d54; cursor:pointer; display:flex; height:36px; justify-content:center; padding:0; position:relative; width:36px; } .notification-button span { background:#179447; border:2px solid #fff; border-radius:50%; height:8px; position:absolute; right:5px; top:5px; width:8px; }
-    .identity { display:grid; text-align:right; } .identity span { color:#18201c; font-size:.82rem; font-weight:700; } .identity small { color:#7a847e; font-size:.7rem; margin-top:.12rem; } .role { background:#edf8f0; border-radius:99px; color:#0f6935; font-size:.68rem; font-weight:800; padding:.35rem .54rem; } .avatar { align-items:center; background:#d9eadf; border-radius:50%; color:#0f6935; display:flex; font-size:.75rem; font-weight:800; height:34px; justify-content:center; width:34px; }
-    .menu-button { display:none; } @media (max-width:700px) { .topbar { height:60px; padding:0 1rem; } .menu-button { display:flex; } .notification-button, .identity, .role { display:none; } .tournament-switcher { background:transparent; border:0; margin-right:auto; padding-left:.4rem; } }
+    .topbar { align-items:center; background:#020b08; border-bottom:1px solid rgba(255,255,255,.08); box-sizing:border-box; display:flex; height:68px; justify-content:space-between; padding:0 2rem; } .greeting strong { color:#f4f6f5; font-size:1rem; } .greeting p { color:#9fa8a3; font-size:.74rem; margin:.27rem 0 0; } .profile-area { display:flex; gap:.55rem; } .profile-area button, .menu-button { align-items:center; background:#07140f; border:1px solid rgba(255,255,255,.09); border-radius:50%; color:#aeb9b3; cursor:pointer; display:flex; height:35px; justify-content:center; padding:0; position:relative; width:35px; } .profile-area button:hover { border-color:rgba(34,211,77,.45); color:#f4f6f5; } .profile-area i { background:#e8b432; border:2px solid #020b08; border-radius:50%; height:7px; position:absolute; right:4px; top:4px; width:7px; } .profile-button { gap:.3rem; width:auto !important; padding:0 .46rem !important; } .profile-button span { color:#e8b432; font-size:.67rem; font-weight:850; } .menu-button { display:none; }
+    @media (max-width:700px) { .topbar { height:60px; padding:0 1rem; } .menu-button { display:flex; margin-right:.7rem; } .greeting { margin-right:auto; } .greeting p { display:none; } .profile-area button:not(.profile-button) { display:none; } }
   `
 })
 export class DashboardTopbarComponent {
