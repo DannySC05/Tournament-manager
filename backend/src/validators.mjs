@@ -46,20 +46,23 @@ export function validateEquipoInput(body, { partial = false } = {}) {
 }
 
 export function validatePartidoInput(body, { partial = false, resultado = false } = {}) {
-  const required = resultado ? ["marcador_local", "marcador_visitante"] : ["equipo_local_id", "equipo_visitante_id", "fecha", "sede", "ronda"];
+  const required = resultado ? ["marcador_local", "marcador_visitante"] : ["fecha", "sede", "ronda"];
   for (const field of required) {
     if (!partial || body[field] !== undefined) {
       const value = body[field];
       assertValid(value !== undefined && value !== null && String(value).trim() !== "", `El campo ${field} es obligatorio.`);
     }
   }
+  if (body.ronda !== undefined) {
+    assertValid(["GRUPOS", "OCTAVOS", "CUARTOS", "SEMIFINAL", "FINAL"].includes(body.ronda), "Fase invalida. Use GRUPOS, OCTAVOS, CUARTOS, SEMIFINAL o FINAL.");
+  }
   for (const field of ["equipo_local_id", "equipo_visitante_id"]) {
-    if (body[field] !== undefined) assertValid(Number.isInteger(Number(body[field])) && Number(body[field]) > 0, `${field} debe ser un id valido.`);
+    if (body[field] !== undefined && body[field] !== null) assertValid(Number.isInteger(Number(body[field])) && Number(body[field]) > 0, `${field} debe ser un id valido.`);
   }
   for (const field of ["marcador_local", "marcador_visitante"]) {
     if (body[field] !== undefined && body[field] !== null) assertValid(Number.isInteger(Number(body[field])) && Number(body[field]) >= 0, "Los marcadores no pueden ser negativos.");
   }
-  if (body.equipo_local_id !== undefined && body.equipo_visitante_id !== undefined) {
+  if (body.equipo_local_id !== undefined && body.equipo_visitante_id !== undefined && body.equipo_local_id !== null && body.equipo_visitante_id !== null) {
     assertValid(Number(body.equipo_local_id) !== Number(body.equipo_visitante_id), "Un equipo no puede jugar contra si mismo.");
   }
   if (body.estado !== undefined) assertValid(ESTADOS_PARTIDO.includes(body.estado), "Estado invalido. Use PROGRAMADO, EN_JUEGO o FINALIZADO.");

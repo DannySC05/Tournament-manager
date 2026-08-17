@@ -22,8 +22,7 @@ button, input, select { font:inherit; }
 body .tournaments-shell,
 body .teams-shell,
 body .matches-shell,
-body .results-shell,
-body .standings-shell { background:var(--world-shell) !important; color:var(--world-ink); }
+body .positions-shell { background:var(--world-shell) !important; color:var(--world-ink); }
 
 body .section-kicker { color:var(--world-gold) !important; letter-spacing:.08em !important; }
 body .page-header > div > p:not(.section-kicker),
@@ -36,8 +35,7 @@ body .table-note { color:var(--world-muted) !important; }
 body .tournaments-card,
 body .teams-card,
 body .matches-card,
-body .results-card,
-body .standings-card,
+body .positions-card,
 body .pending-match,
 body .format-state { background:rgba(6,20,15,.86) !important; border-color:var(--world-border) !important; color:var(--world-ink) !important; box-shadow:none !important; }
 
@@ -66,7 +64,6 @@ body .score-form input { background:#0a1913 !important; border-color:rgba(255,25
 body th { background:#0a1913 !important; border-color:var(--world-border) !important; color:#9fa8a3 !important; }
 body td,
 body .match-row,
-body .result-row,
 body .team-row,
 body .pending-footer,
 body .group-tabs,
@@ -76,6 +73,11 @@ body .leader { background:rgba(34,211,77,.06) !important; }
 body .leader .position,
 body .group-tabs button.active { background:rgba(34,211,77,.12) !important; border-color:rgba(34,211,77,.35) !important; color:#72e68c !important; }
 body .points { color:#72e68c !important; }
+
+body .view-toggle { background:#0a1913 !important; border-color:rgba(255,255,255,.12) !important; }
+body .view-toggle button { color:#d9e2dc !important; }
+body .view-toggle button:hover { color:var(--world-emerald-bright) !important; }
+body .view-toggle button.active { background:rgba(34,211,77,.10) !important; color:var(--world-emerald-bright) !important; box-shadow:none !important; }
 
 body .empty-icon,
 body .format-icon { background:rgba(34,211,77,.10) !important; color:var(--world-emerald-bright) !important; }

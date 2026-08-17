@@ -26,7 +26,7 @@ import { Tournament } from '../dashboard.models';
       }
       <div class="profile-area" aria-label="Acciones de usuario">
         <button type="button" title="Notificaciones" aria-label="Notificaciones"><svg lucideBell width="18" height="18" /><i aria-hidden="true"></i></button>
-        <button type="button" title="Calendario" aria-label="Calendario"><svg lucideCalendarDays width="18" height="18" /></button>
+        <button type="button" title="Partidos" aria-label="Partidos"><svg lucideCalendarDays width="18" height="18" /></button>
         <button class="profile-button" type="button" title="Perfil" aria-label="Perfil"><svg lucideUserRound width="18" height="18" /><span>{{ initials() }}</span></button>
       </div>
     </header>

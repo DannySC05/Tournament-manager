@@ -1,160 +1,241 @@
-# Contexto del Proyecto: Plataforma de Torneos
+# Contexto Completo: Mundial de Selecciones
 
-Este documento esta pensado para pegarse como contexto en un chat conversacional de diseno, producto o desarrollo.
+> Referencia para desarrollo, diseno, exposiciones y conversaciones futuras sobre el proyecto.
 
-## Objetivo del producto
+## Objetivo
 
-Se esta construyendo una aplicacion web para administrar torneos deportivos. La primera version se enfoca en futbol, pero el modelo permite administrar otros deportes.
+**Mundial de Selecciones** es una aplicacion web para administrar uno o varios mundiales de futbol. Centraliza la configuracion de torneos, paises participantes, grupos, partidos, resultados y tablas de clasificacion.
 
-La plataforma debe permitir a un administrador crear un torneo, registrar equipos, programar partidos, actualizar resultados y consultar el avance del torneo. La aplicacion debe sentirse como una herramienta real de gestion deportiva, no como una pagina promocional.
+Es una herramienta operativa, no una pagina de noticias o promocional. Debe permitir responder rapidamente:
 
-## Problema que resuelve
+- Que mundial esta seleccionado y cual es su estado.
+- Cuantas selecciones y partidos contiene.
+- Que encuentros estan programados, en juego o finalizados.
+- Que resultados y clasificaciones existen.
+- Que accion administrativa corresponde realizar.
 
-Organizar un torneo de forma manual suele dispersar equipos, fechas, resultados y estados de partidos entre hojas de calculo, chats y notas. La plataforma centraliza esa informacion y aplica reglas para evitar errores, como registrar a un equipo dos veces, programar un equipo contra si mismo o modificar datos sin permisos.
+## Estado Actual
 
-## Usuarios y permisos
+El sistema ya funciona de extremo a extremo:
 
-- `ADMIN`: gestiona torneos, equipos, partidos y resultados.
-- `CONSULTA`: puede revisar la informacion, pero no modificarla.
+- Registro e inicio de sesion.
+- Dashboard del mundial seleccionado.
+- Gestion de Mundiales, Selecciones, Calendario, Fases, Resultados y Grupos.
+- Catalogo FIFA persistente con ranking, confederacion, codigo y bandera.
+- API REST con JWT, roles, validaciones y reglas de negocio.
+- PostgreSQL en Supabase y arquitectura preparada para Vercel.
 
-El primer usuario registrado en una base de datos vacia puede ser `ADMIN`. Los usuarios creados posteriormente reciben el rol `CONSULTA`.
-
-## Funcionalidad ya implementada
-
-- Registro e inicio de sesion con JWT.
-- Proteccion de rutas de API mediante token `Bearer`.
-- Control de autorizacion por roles `ADMIN` y `CONSULTA`.
-- Creacion, consulta, edicion y eliminacion de torneos.
-- Registro, edicion y eliminacion de equipos dentro de un torneo.
-- Programacion, edicion y eliminacion de partidos.
-- Registro de resultados y finalizacion automatica de un partido.
-- Validaciones de campos, fechas, marcadores y reglas de negocio.
-- Base de datos SQLite persistente.
-- Coleccion de Postman para pruebas de la API.
-
-## Reglas de negocio importantes
-
-- Un equipo pertenece a un solo torneo.
-- Un partido enfrenta equipos del mismo torneo.
-- Un equipo no puede jugar contra si mismo.
-- Los marcadores no pueden ser negativos.
-- Al registrar un resultado valido, el partido cambia a estado `FINALIZADO`.
-- Los estados de partido son `PROGRAMADO`, `EN_JUEGO` y `FINALIZADO`.
-- Los estados de torneo son `BORRADOR`, `EN_CURSO` y `FINALIZADO`.
-- Los formatos de torneo disponibles son `LIGA`, `ELIMINACION` y `MIXTO`.
-- Las operaciones de modificacion requieren rol `ADMIN`.
-
-## Estado actual de la interfaz
-
-Solo esta terminada la pantalla de autenticacion:
-
-- Ruta de inicio de sesion: `/acceso`.
-- Ruta de registro: `/registro`.
-- La pantalla no muestra barra de navegacion.
-- Usa un estadio de futbol como fondo, un jugador recortado a la izquierda y un panel de autenticacion de vidrio esmerilado a la derecha.
-- El estilo usa verde deportivo, blanco, gris oscuro, bordes redondeados y transparencia ligera.
-- La interfaz es responsive: el jugador se reduce en tablet y se oculta en movil para priorizar titulo y formulario.
-
-La pagina principal de administracion todavia no esta construida. Es el siguiente modulo a disenar.
-
-## Direccion de diseno para la pagina principal
-
-La pagina principal debe ser una aplicacion de trabajo para administradores y usuarios de consulta, no una landing page de marketing.
-
-Principios visuales:
-
-- Estetica moderna, deportiva y profesional.
-- Paleta principal: verde, blanco, gris oscuro y grises neutros.
-- Informacion densa pero ordenada y facil de escanear.
-- Jerarquia clara entre torneo activo, proximos partidos, resultados y equipos.
-- Espaciado generoso, pero sin tarjetas decorativas excesivas.
-- Bordes discretos, radios de entre 8 px y 12 px para superficies de trabajo.
-- Iconos claros para acciones de crear, editar, eliminar, filtrar y navegar.
-- Evitar composiciones tipo marketing, heroes grandes o fondos recargados dentro del panel administrativo.
-
-Posibles modulos de la pagina principal:
-
-1. Resumen del torneo activo: nombre, deporte, formato, estado y fechas.
-2. Indicadores principales: equipos registrados, partidos programados, partidos en juego y partidos finalizados.
-3. Proximos partidos: fecha, ronda, sede, equipos y estado.
-4. Resultados recientes: marcador, estado y acceso a detalle.
-5. Equipos del torneo: listado compacto con grupo opcional.
-6. Acciones para administradores: crear torneo, agregar equipo, programar partido y registrar resultado.
-7. Selector de torneo para usuarios que administren o consulten mas de uno.
-
-## Restricciones de UX para idear disenos
-
-- El usuario debe entender rapidamente que torneo esta viendo y en que estado se encuentra.
-- Las acciones sensibles deben ser visibles solo para `ADMIN`.
-- La informacion de consulta debe seguir siendo util para el rol `CONSULTA`.
-- Crear un torneo, agregar un equipo o registrar un resultado debe requerir pocos pasos.
-- Los partidos deben mostrar visualmente su estado: programado, en juego o finalizado.
-- Los estados no deben depender solo del color; deben incluir texto o iconos.
-- La pagina debe funcionar bien en escritorio, tablet y movil.
-
-## Arquitectura tecnica
-
-El proyecto esta organizado como un monorepo simple:
+## Arquitectura
 
 ```text
 API_Mundial-Examen/
-  frontend/                 # Aplicacion Angular
-    src/
-    public/assets/
-  backend/                  # API Node.js
-    src/                    # Rutas, seguridad, validaciones y configuracion
-    database/               # Migraciones y SQLite
-    scripts/                # Verificacion automatica
-    postman/                # Coleccion de pruebas
-  docs/                     # Documentacion de producto y arquitectura
+|-- frontend/                         # Angular 22
+|   |-- src/app/core/                 # Servicios HTTP, auth y modelos
+|   |-- src/app/pages/                # Paginas y componentes
+|   |-- src/environments/             # URLs por ambiente
+|   `-- public/assets/mundial-login/  # Fondo, copa y pedestal del login
+|
+|-- backend/                          # API REST Node.js con ESM
+|   |-- src/app.mjs                   # Rutas y reglas de negocio
+|   |-- src/security.mjs              # Hash PBKDF2 y JWT HS256
+|   |-- src/validators.mjs            # Validaciones de entrada
+|   |-- src/standings.mjs             # Clasificacion por grupos
+|   |-- src/fifa-catalog.mjs          # Sincronizacion FIFA
+|   |-- database/migrations/          # Esquema PostgreSQL incremental
+|   |-- scripts/verify.mjs            # Verificacion automatica
+|   `-- postman/                      # Coleccion de pruebas manuales
+|
+|-- api/entry.js                      # Adaptador serverless de Vercel
+|-- vercel.json                       # Build, rewrites y salida
+`-- docs/                             # Documentacion
 ```
 
-### Frontend
+| Capa | Tecnologia | Responsabilidad |
+|---|---|---|
+| Frontend | Angular 22, TypeScript, SCSS, RxJS | Interfaz, formularios, rutas y consumo de API |
+| Iconos | Lucide Angular | Iconografia de navegacion y acciones |
+| Backend | Node.js, modulos ES, HTTP nativo | API REST y reglas de negocio |
+| Seguridad | `node:crypto` | PBKDF2-SHA256 y JWT HS256 |
+| Datos | PostgreSQL en Supabase | Persistencia relacional |
+| Catalogo | API publica FIFA y FlagCDN | Ranking, confederacion y banderas |
+| Hosting | Vercel | Angular estatico y funcion `/api` |
 
-- Framework: Angular.
-- Responsabilidad: interfaz, rutas visuales, formularios, estado de sesion y llamadas HTTP a la API.
-- La autenticacion almacena el token JWT y el usuario autenticado para proteger vistas internas.
+## Frontend
+
+### Rutas
+
+| Ruta | Vista | Uso |
+|---|---|---|
+| `/acceso` | Autenticacion | Iniciar sesion |
+| `/registro` | Autenticacion | Crear cuenta |
+| `/panel` | Dashboard | Resumen del mundial seleccionado |
+| `/modulos/torneos` | Mundiales | Crear y configurar ediciones |
+| `/modulos/equipos` | Selecciones | Elegir participantes FIFA y grupos |
+| `/modulos/partidos` | Calendario | Gestionar partidos |
+| `/modulos/resultados` | Fases | Consultar y registrar resultados |
+| `/modulos/clasificacion` | Grupos | Consultar tablas de posiciones |
+
+Las rutas internas exigen autenticacion. Acceso y Registro usan un guard de invitado para evitar que una sesion activa vuelva al login.
+
+### Estilo visual
+
+- Login a pantalla completa, sin navbar, con estadio oscuro, mapa mundial, copa y pedestal esmeralda.
+- Panel de autenticacion de vidrio esmerilado.
+- Panel interno con verde esmeralda, verde brillante, dorado, negro verdoso y blanco suave.
+- Barra lateral: Inicio, Torneos, Selecciones, Fases, Grupos y Calendario.
+- El dashboard resume datos; los CRUD se realizan en modulos separados mediante dialogos.
+
+### Sesion del navegador
+
+`AuthService` guarda solo los datos necesarios en `localStorage`:
+
+- `torneos_token`: JWT.
+- `torneos_user`: nombre, email y rol.
+
+El interceptor HTTP adjunta `Authorization: Bearer <token>` a solicitudes protegidas. Al restaurar sesion, se consulta `GET /api/auth/me`; si falla, se descarta el estado local.
+
+| Entorno | `apiBaseUrl` |
+|---|---|
+| Desarrollo | `http://localhost:3000/api` |
+| Produccion | `/api` |
+
+## Backend y Seguridad
+
+El backend es una API HTTP propia de Node.js. No usa Express: el manejador central esta en `backend/src/app.mjs`.
+
+### Autenticacion
+
+1. El usuario se registra o inicia sesion.
+2. La contrasena se guarda con PBKDF2-SHA256, 120 000 iteraciones y salt aleatorio.
+3. La API firma un JWT HS256 con `JWT_SECRET`.
+4. El frontend lo envia como token Bearer.
+5. La API verifica firma, expiracion y que el usuario siga existiendo.
+
+El tiempo de sesion se controla mediante `JWT_EXPIRES_SECONDS`; por defecto son ocho horas.
+
+### Roles
+
+| Rol | Acceso |
+|---|---|
+| `ADMIN` | Crear, modificar y eliminar; sincronizar FIFA |
+| `CONSULTA` | Solo consultar recursos con GET |
+
+El primer usuario de una base vacia es `ADMIN`. Los siguientes son `CONSULTA` aunque el cliente intente solicitar otro rol.
+
+### Errores HTTP
+
+| Codigo | Significado |
+|---|---|
+| `200` | Consulta o actualizacion correcta |
+| `201` | Recurso creado |
+| `400` | Validacion o regla de negocio incumplida |
+| `401` | Token ausente, invalido o expirado |
+| `403` | El rol no puede modificar |
+| `404` | Ruta o recurso inexistente |
+| `409` | Conflicto o dato duplicado |
+
+## Base de Datos
+
+Las migraciones se aplican en orden desde `backend/database/migrations`.
+
+| Tabla | Contenido |
+|---|---|
+| `users` | Cuentas, hash de contrasena y rol |
+| `torneos` | Mundial, formato, cupo, grupos, fechas, estado y ganador |
+| `selecciones_catalogo` | Pais, codigo FIFA, confederacion, bandera/escudo y ranking |
+| `equipos` | Seleccion inscrita en un torneo y su grupo |
+| `partidos` | Encuentro, fecha, sede, ronda, estado y marcadores |
+
+Relaciones importantes:
+
+- Un torneo tiene muchas selecciones y partidos.
+- Una seleccion del catalogo puede participar en varios torneos, pero una vez por torneo.
+- Los dos equipos de un partido pertenecen al mismo torneo.
+- El ganador debe ser una seleccion de ese torneo.
+
+## Reglas de Negocio
+
+### Mundiales
+
+- Formatos: `LIGA`, `ELIMINACION`, `MIXTO`.
+- Participantes permitidos: `2`, `4`, `8`, `10`, `12`, `16`, `24`, `32`, `48`.
+- Liga y Mixto requieren grupos que dividan exactamente a los participantes y dejen minimo dos paises por grupo.
+- Eliminatoria no usa grupos.
+- Estados: `BORRADOR`, `EN_CURSO`, `FINALIZADO`.
+- Un mundial solo finaliza al elegir una seleccion ganadora registrada.
+- No se puede reducir el cupo por debajo de las selecciones ya inscritas.
+
+### Selecciones y grupos
+
+- Las selecciones vienen del catalogo FIFA, no de texto libre.
+- Una seleccion no puede repetirse dentro de un mundial.
+- No se puede exceder el cupo configurado.
+- Para mundiales con grupos, el selector muestra letras de `A` hasta el limite configurado. Ejemplo: 12 grupos habilita `A` a `L`.
+- La API rechaza valores de grupo fuera de esa configuracion.
+- Un torneo eliminatorio no asigna grupos.
+
+### Partidos y resultados
+
+- Ninguna seleccion puede jugar contra si misma.
+- Los marcadores son enteros no negativos.
+- Estados: `PROGRAMADO`, `EN_JUEGO`, `FINALIZADO`.
+- Registrar un resultado valido finaliza el partido.
+- No se puede eliminar la seleccion campeona de un torneo finalizado.
+
+### Clasificacion
+
+La tabla se calcula solo desde partidos `FINALIZADO`, agrupados por grupo. Incluye partidos jugados, victorias, empates, derrotas, goles a favor, goles en contra, diferencia y puntos.
+
+## Catalogo FIFA
+
+El catalogo se persiste en PostgreSQL y no consulta la API externa cada vez que un usuario abre la pagina.
+
+1. Un `ADMIN` pulsa **Actualizar FIFA** en Selecciones.
+2. El backend consulta el ranking masculino vigente de FIFA.
+3. Inserta o actualiza el catalogo local.
+4. La interfaz muestra nombre, codigo FIFA, confederacion, ranking y bandera.
+
+El modelo admite `escudo_url` para futuras fuentes de escudos oficiales. Mientras tanto, la interfaz utiliza banderas de FlagCDN como respaldo visual.
+
+## Endpoints
+
+Todas las rutas protegidas requieren `Authorization: Bearer <token>`.
+
+| Metodo | Ruta | Acceso | Funcion |
+|---|---|---|---|
+| POST | `/api/auth/register` | Publico | Crear cuenta |
+| POST | `/api/auth/login` | Publico | Iniciar sesion |
+| GET | `/api/auth/me` | Protegido | Usuario actual |
+| GET | `/api/catalogo-selecciones` | Protegido | Listar catalogo FIFA |
+| POST | `/api/catalogo-selecciones` | ADMIN | Alta manual de catalogo |
+| POST | `/api/catalogo-selecciones/sincronizar-ranking` | ADMIN | Sincronizar FIFA |
+| GET, POST | `/api/torneos` | GET protegido, POST ADMIN | Listar o crear mundiales |
+| GET, PUT, DELETE | `/api/torneos/:id` | GET protegido, escritura ADMIN | Gestionar mundial |
+| GET, POST | `/api/torneos/:id/equipos` | GET protegido, POST ADMIN | Consultar o inscribir selecciones |
+| GET | `/api/torneos/:id/clasificacion` | Protegido | Tabla de posiciones |
+| PUT, DELETE | `/api/equipos/:id` | ADMIN | Cambiar grupo o eliminar seleccion |
+| GET, POST | `/api/torneos/:id/partidos` | GET protegido, POST ADMIN | Consultar o crear partidos |
+| GET, PUT, DELETE | `/api/partidos/:id` | GET protegido, escritura ADMIN | Gestionar partido |
+| PUT | `/api/partidos/:id/resultado` | ADMIN | Registrar resultado |
+
+## Ejecucion Local
+
+Usa dos terminales desde la raiz.
 
 ### Backend
-
-- Runtime: Node.js con modulos ES (`.mjs`).
-- Base de datos: SQLite.
-- Seguridad: JWT, contrasenas con hash criptografico y autorizacion por roles.
-- API: REST en `http://localhost:3000`.
-
-### Datos principales
-
-- `users`: nombre, email, hash de contrasena y rol.
-- `torneos`: nombre, deporte, formato, fechas y estado.
-- `equipos`: nombre, grupo opcional y torneo asociado.
-- `partidos`: torneo, equipos local y visitante, fecha, sede, ronda, estado y marcadores.
-
-## Endpoints principales
-
-| Metodo | Ruta | Uso |
-|---|---|---|
-| POST | `/api/auth/register` | Crear cuenta |
-| POST | `/api/auth/login` | Iniciar sesion |
-| GET | `/api/auth/me` | Obtener usuario autenticado |
-| GET, POST | `/api/torneos` | Consultar o crear torneos |
-| GET, PUT, DELETE | `/api/torneos/:id` | Gestionar un torneo |
-| GET, POST | `/api/torneos/:id/equipos` | Consultar o agregar equipos |
-| PUT, DELETE | `/api/equipos/:id` | Editar o eliminar equipo |
-| GET, POST | `/api/torneos/:id/partidos` | Consultar o programar partidos |
-| PUT, DELETE | `/api/partidos/:id` | Editar o eliminar partido |
-| PUT | `/api/partidos/:id/resultado` | Registrar resultado |
-
-## Ejecucion local
-
-Terminal de backend:
 
 ```powershell
 cd backend
 npm install
+Copy-Item .env.example .env
+# Configura DATABASE_URL y JWT_SECRET.
+npm run db:migrate
 npm start
 ```
 
-Terminal de frontend:
+API: `http://localhost:3000`
+
+### Frontend
 
 ```powershell
 cd frontend
@@ -162,9 +243,45 @@ npm install
 npm start
 ```
 
-- Frontend: `http://localhost:4200`.
-- Backend: `http://localhost:3000`.
+Interfaz: `http://localhost:4200`
 
-## Instruccion sugerida para un chat de ideacion
+Si el puerto 3000 esta ocupado, otra instancia de la API ya esta activa. Se puede usar esa instancia o detener su proceso antes de iniciar una nueva.
 
-> Estoy construyendo una plataforma web para administrar torneos deportivos. Ya tengo una pantalla de autenticacion deportiva, moderna y premium en verde, blanco y gris. El backend usa Node.js, JWT, roles ADMIN y CONSULTA, SQLite, y permite gestionar torneos, equipos, partidos y resultados. Ahora necesito disenar la pagina principal de administracion. Debe ser una herramienta de trabajo, no una landing page: clara, deportiva, profesional, con informacion de torneos, proximos partidos, resultados, equipos y acciones administrativas. Propone una estructura visual responsive, con navegacion, jerarquia de datos y componentes adecuados para un administrador de torneos.
+### Verificacion
+
+```powershell
+cd backend
+npm run verify
+
+cd ..\frontend
+npx ng build --configuration production
+```
+
+`verify` utiliza una base temporal en memoria y comprueba autenticacion, autorizacion, torneos, selecciones, grupos, partidos, resultados y clasificacion sin alterar Supabase.
+
+## Vercel y Supabase
+
+- Supabase mantiene PostgreSQL y debe tener aplicadas las migraciones `001`, `002` y `003`.
+- Vercel instala ambos paquetes, compila Angular y publica `frontend/dist/frontend/browser`.
+- `api/entry.js` reutiliza el mismo backend local como funcion serverless.
+- `vercel.json` envia `/api/*` a la funcion y las rutas restantes a Angular.
+- En Vercel se definen `DATABASE_URL`, `PG_POOL_MAX=1`, `JWT_SECRET` y `JWT_EXPIRES_SECONDS` en Production y Preview.
+- Los cambios llegan al despliegue cuando se realiza `git push` a la rama configurada en Vercel.
+
+Consulta [DESPLIEGUE_VERCEL_SUPABASE.md](DESPLIEGUE_VERCEL_SUPABASE.md) para el proceso detallado.
+
+## Flujo Recomendado
+
+1. Registrar el primer usuario administrador.
+2. Sincronizar FIFA una vez.
+3. Crear el mundial con formato, cupo, grupos y fechas.
+4. Abrir Selecciones e inscribir paises en el mundial seleccionado.
+5. Asignar grupos permitidos cuando corresponda.
+6. Programar encuentros en Calendario.
+7. Registrar resultados desde Fases o Resultados.
+8. Consultar tablas en Grupos.
+9. Elegir ganador y finalizar el mundial al concluir.
+
+## Contexto Breve para Otro Chat
+
+> Estoy desarrollando **Mundial de Selecciones**, una aplicacion Angular 22 con backend Node.js REST y PostgreSQL en Supabase. Gestiona varios mundiales con autenticacion JWT y roles ADMIN/CONSULTA. Permite crear torneos de Liga, Eliminatoria o Mixto, definir participantes y grupos, escoger selecciones desde un catalogo FIFA persistente, programar partidos, registrar resultados y calcular tablas. El login tiene una estetica premium de estadio oscuro con copa y pedestal esmeralda; el panel interno usa verde esmeralda, dorado y negro verdoso. La interfaz debe sentirse como una herramienta operativa deportiva, no una landing page. Mantener la separacion `frontend/` Angular y `backend/` Node, las reglas de negocio y la API REST existente.

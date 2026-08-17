@@ -7,8 +7,7 @@ import { ModulePlaceholderPage } from './pages/module-placeholder/module-placeho
 import { TournamentsPage } from './pages/tournaments/tournaments.page';
 import { TeamsPage } from './pages/teams/teams.page';
 import { MatchesPage } from './pages/matches/matches.page';
-import { ResultsPage } from './pages/results/results.page';
-import { StandingsPage } from './pages/standings/standings.page';
+import { PositionsPage } from './pages/positions/positions.page';
 
 export const routes: Routes = [
   { path: 'acceso', component: AuthPage, canActivate: [guestGuard] },
@@ -17,8 +16,7 @@ export const routes: Routes = [
   { path: 'modulos/torneos', component: TournamentsPage, canActivate: [authGuard] },
   { path: 'modulos/equipos', component: TeamsPage, canActivate: [authGuard] },
   { path: 'modulos/partidos', component: MatchesPage, canActivate: [authGuard] },
-  { path: 'modulos/resultados', component: ResultsPage, canActivate: [authGuard] },
-  { path: 'modulos/clasificacion', component: StandingsPage, canActivate: [authGuard] },
+  { path: 'modulos/posiciones', component: PositionsPage, canActivate: [authGuard] },
   { path: 'modulos/:module', component: ModulePlaceholderPage, canActivate: [authGuard] },
   { path: '', pathMatch: 'full', redirectTo: 'panel' },
   { path: '**', redirectTo: 'panel' }

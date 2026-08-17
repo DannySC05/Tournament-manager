@@ -6,7 +6,7 @@ import { LucideCalendarDays, LucidePencil, LucidePlus, LucideSearch, LucideSlide
 import { forkJoin } from 'rxjs';
 
 import { AuthService } from '../../core/auth/auth.service';
-import { Match, MatchPayload, MatchStatus } from '../../core/matches/match.models';
+import { Match, MatchPayload, MatchStatus, MatchRound } from '../../core/matches/match.models';
 import { MatchService } from '../../core/matches/match.service';
 import { Team } from '../../core/teams/team.models';
 import { TeamService } from '../../core/teams/team.service';
@@ -62,11 +62,11 @@ export class MatchesPage implements OnInit {
   });
 
   protected readonly form = this.formBuilder.nonNullable.group({
-    equipo_local_id: [0, [Validators.required, Validators.min(1)]],
-    equipo_visitante_id: [0, [Validators.required, Validators.min(1)]],
+    equipo_local_id: [null as number | null],
+    equipo_visitante_id: [null as number | null],
     fecha: ['', Validators.required],
     sede: ['', [Validators.required, Validators.minLength(2)]],
-    ronda: ['', [Validators.required, Validators.minLength(2)]],
+    ronda: ['GRUPOS' as MatchRound, Validators.required],
     estado: ['PROGRAMADO' as Exclude<MatchStatus, 'FINALIZADO'>, Validators.required]
   });
 
@@ -105,7 +105,7 @@ export class MatchesPage implements OnInit {
     this.editing.set(null);
     this.formOpen.set(true);
     this.formError.set('');
-    this.form.reset({ equipo_local_id: 0, equipo_visitante_id: 0, fecha: '', sede: '', ronda: '', estado: 'PROGRAMADO' });
+    this.form.reset({ equipo_local_id: null, equipo_visitante_id: null, fecha: '', sede: '', ronda: 'GRUPOS', estado: 'PROGRAMADO' });
   }
 
   protected openEdit(match: Match): void {
@@ -114,11 +114,11 @@ export class MatchesPage implements OnInit {
     this.formOpen.set(true);
     this.formError.set('');
     this.form.reset({
-      equipo_local_id: match.equipo_local_id ?? 0,
-      equipo_visitante_id: match.equipo_visitante_id ?? 0,
+      equipo_local_id: match.equipo_local_id ?? null,
+      equipo_visitante_id: match.equipo_visitante_id ?? null,
       fecha: this.datetimeInput(match.fecha),
       sede: match.sede,
-      ronda: match.ronda,
+      ronda: match.ronda as MatchRound,
       estado: match.estado
     });
   }
@@ -139,7 +139,7 @@ export class MatchesPage implements OnInit {
     }
 
     const value = this.form.getRawValue();
-    if (value.equipo_local_id === value.equipo_visitante_id) {
+    if (value.equipo_local_id !== null && value.equipo_visitante_id !== null && value.equipo_local_id === value.equipo_visitante_id) {
       this.formError.set('El equipo local y visitante deben ser diferentes.');
       return;
     }
@@ -148,7 +148,7 @@ export class MatchesPage implements OnInit {
       equipo_visitante_id: value.equipo_visitante_id,
       fecha: value.fecha,
       sede: value.sede.trim(),
-      ronda: value.ronda.trim(),
+      ronda: value.ronda as MatchRound,
       estado: value.estado
     };
     const current = this.editing();

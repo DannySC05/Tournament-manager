@@ -126,8 +126,8 @@ function validateGroupForTournament(torneo, group) {
 
 function partidoPayload(body, current = {}) {
   return {
-    equipo_local_id: body.equipo_local_id !== undefined ? Number(body.equipo_local_id) : current.equipo_local_id,
-    equipo_visitante_id: body.equipo_visitante_id !== undefined ? Number(body.equipo_visitante_id) : current.equipo_visitante_id,
+    equipo_local_id: body.equipo_local_id !== undefined ? (body.equipo_local_id === null ? null : Number(body.equipo_local_id)) : current.equipo_local_id,
+    equipo_visitante_id: body.equipo_visitante_id !== undefined ? (body.equipo_visitante_id === null ? null : Number(body.equipo_visitante_id)) : current.equipo_visitante_id,
     fecha: body.fecha ?? current.fecha,
     sede: body.sede ?? current.sede,
     ronda: body.ronda ?? current.ronda,
@@ -138,10 +138,10 @@ function partidoPayload(body, current = {}) {
 }
 
 const partidoFields = `
-  SELECT p.*, local.nombre AS equipo_local, visitante.nombre AS equipo_visitante
+  SELECT p.*, COALESCE(local.nombre, 'Por definir') AS equipo_local, COALESCE(visitante.nombre, 'Por definir') AS equipo_visitante
   FROM partidos p
-  JOIN equipos local ON local.id = p.equipo_local_id
-  JOIN equipos visitante ON visitante.id = p.equipo_visitante_id
+  LEFT JOIN equipos local ON local.id = p.equipo_local_id
+  LEFT JOIN equipos visitante ON visitante.id = p.equipo_visitante_id
 `;
 
 async function getPartido(db, id) {
@@ -150,12 +150,14 @@ async function getPartido(db, id) {
 }
 
 async function ensureEquiposDelTorneo(db, torneoId, payload) {
-  const [local, visitante] = await Promise.all([
-    ensureEquipo(db, payload.equipo_local_id, "El equipo local"),
-    ensureEquipo(db, payload.equipo_visitante_id, "El equipo visitante")
-  ]);
-  if (local.torneo_id !== torneoId || visitante.torneo_id !== torneoId) {
-    throw new HttpError(400, "Los equipos deben pertenecer al torneo indicado.");
+  const checks = [];
+  if (payload.equipo_local_id !== null) checks.push(ensureEquipo(db, payload.equipo_local_id, "El equipo local"));
+  if (payload.equipo_visitante_id !== null) checks.push(ensureEquipo(db, payload.equipo_visitante_id, "El equipo visitante"));
+  const teams = await Promise.all(checks);
+  for (const team of teams) {
+    if (team.torneo_id !== torneoId) {
+      throw new HttpError(400, "Los equipos deben pertenecer al torneo indicado.");
+    }
   }
 }
 

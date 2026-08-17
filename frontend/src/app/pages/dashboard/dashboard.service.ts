@@ -65,22 +65,22 @@ export class DashboardService {
         { id: 12, nombre: 'Campus FC', grupo: null }
       ],
       matches: [
-        { id: 1, equipo_local: 'Barcelona SC', equipo_visitante: 'Emelec', fecha: '2026-08-10T18:30:00', sede: 'Estadio Principal', ronda: 'Jornada 4', marcador_local: null, marcador_visitante: null, estado: 'PROGRAMADO' },
-        { id: 2, equipo_local: 'Liga FC', equipo_visitante: 'Norte FC', fecha: '2026-08-10T20:00:00', sede: 'Cancha 2', ronda: 'Jornada 4', marcador_local: null, marcador_visitante: null, estado: 'PROGRAMADO' },
-        { id: 3, equipo_local: 'Atletico', equipo_visitante: 'Sur FC', fecha: '2026-08-11T17:30:00', sede: 'Estadio Principal', ronda: 'Jornada 4', marcador_local: null, marcador_visitante: null, estado: 'PROGRAMADO' },
-        { id: 4, equipo_local: 'Barcelona SC', equipo_visitante: 'Norte FC', fecha: '2026-08-09T18:30:00', sede: 'Cancha 1', ronda: 'Jornada 3', marcador_local: 3, marcador_visitante: 1, estado: 'FINALIZADO' },
-        { id: 5, equipo_local: 'Emelec', equipo_visitante: 'Liga FC', fecha: '2026-08-09T20:00:00', sede: 'Cancha 2', ronda: 'Jornada 3', marcador_local: 2, marcador_visitante: 2, estado: 'FINALIZADO' },
-        { id: 6, equipo_local: 'Atletico', equipo_visitante: 'Sur FC', fecha: '2026-08-08T17:30:00', sede: 'Estadio Principal', ronda: 'Jornada 3', marcador_local: 0, marcador_visitante: 2, estado: 'FINALIZADO' },
-        { id: 7, equipo_local: 'Puerto Azul', equipo_visitante: 'Campus FC', fecha: '2026-08-07T19:00:00', sede: 'Cancha 1', ronda: 'Jornada 3', marcador_local: 1, marcador_visitante: 1, estado: 'EN_JUEGO' },
-        { id: 8, equipo_local: 'San Marcos', equipo_visitante: 'Santa Maria', fecha: '2026-08-06T19:00:00', sede: 'Cancha 2', ronda: 'Jornada 3', marcador_local: 0, marcador_visitante: 1, estado: 'FINALIZADO' },
-        { id: 9, equipo_local: 'Deportivo Oeste', equipo_visitante: 'Union Central', fecha: '2026-08-05T19:00:00', sede: 'Cancha 1', ronda: 'Jornada 3', marcador_local: 2, marcador_visitante: 0, estado: 'FINALIZADO' },
-        { id: 10, equipo_local: 'Campus FC', equipo_visitante: 'Liga FC', fecha: '2026-08-04T19:00:00', sede: 'Cancha 2', ronda: 'Jornada 3', marcador_local: 1, marcador_visitante: 3, estado: 'FINALIZADO' },
-        { id: 11, equipo_local: 'Emelec', equipo_visitante: 'Atletico', fecha: '2026-08-03T19:00:00', sede: 'Cancha 1', ronda: 'Jornada 3', marcador_local: 1, marcador_visitante: 0, estado: 'FINALIZADO' },
-        { id: 12, equipo_local: 'Norte FC', equipo_visitante: 'Sur FC', fecha: '2026-08-02T19:00:00', sede: 'Cancha 2', ronda: 'Jornada 3', marcador_local: 0, marcador_visitante: 2, estado: 'FINALIZADO' },
-        { id: 13, equipo_local: 'Barcelona SC', equipo_visitante: 'Union Central', fecha: '2026-08-01T19:00:00', sede: 'Cancha 1', ronda: 'Jornada 2', marcador_local: 2, marcador_visitante: 0, estado: 'FINALIZADO' },
-        { id: 14, equipo_local: 'Liga FC', equipo_visitante: 'Santa Maria', fecha: '2026-07-31T19:00:00', sede: 'Cancha 2', ronda: 'Jornada 2', marcador_local: 4, marcador_visitante: 1, estado: 'FINALIZADO' },
-        { id: 15, equipo_local: 'Emelec', equipo_visitante: 'Deportivo Oeste', fecha: '2026-07-30T19:00:00', sede: 'Cancha 1', ronda: 'Jornada 2', marcador_local: 2, marcador_visitante: 1, estado: 'FINALIZADO' },
-        { id: 16, equipo_local: 'Atletico', equipo_visitante: 'Puerto Azul', fecha: '2026-07-29T19:00:00', sede: 'Cancha 2', ronda: 'Jornada 2', marcador_local: 1, marcador_visitante: 0, estado: 'FINALIZADO' }
+        { id: 1, equipo_local_id: null, equipo_visitante_id: null, equipo_local: 'Barcelona SC', equipo_visitante: 'Emelec', fecha: '2026-08-10T18:30:00', sede: 'Estadio Principal', ronda: 'GRUPOS', marcador_local: null, marcador_visitante: null, estado: 'PROGRAMADO' },
+        { id: 2, equipo_local_id: null, equipo_visitante_id: null, equipo_local: 'Liga FC', equipo_visitante: 'Norte FC', fecha: '2026-08-10T20:00:00', sede: 'Cancha 2', ronda: 'GRUPOS', marcador_local: null, marcador_visitante: null, estado: 'PROGRAMADO' },
+        { id: 3, equipo_local_id: null, equipo_visitante_id: null, equipo_local: 'Atletico', equipo_visitante: 'Sur FC', fecha: '2026-08-11T17:30:00', sede: 'Estadio Principal', ronda: 'GRUPOS', marcador_local: null, marcador_visitante: null, estado: 'PROGRAMADO' },
+        { id: 4, equipo_local_id: null, equipo_visitante_id: null, equipo_local: 'Barcelona SC', equipo_visitante: 'Norte FC', fecha: '2026-08-09T18:30:00', sede: 'Cancha 1', ronda: 'GRUPOS', marcador_local: 3, marcador_visitante: 1, estado: 'FINALIZADO' },
+        { id: 5, equipo_local_id: null, equipo_visitante_id: null, equipo_local: 'Emelec', equipo_visitante: 'Liga FC', fecha: '2026-08-09T20:00:00', sede: 'Cancha 2', ronda: 'GRUPOS', marcador_local: 2, marcador_visitante: 2, estado: 'FINALIZADO' },
+        { id: 6, equipo_local_id: null, equipo_visitante_id: null, equipo_local: 'Atletico', equipo_visitante: 'Sur FC', fecha: '2026-08-08T17:30:00', sede: 'Estadio Principal', ronda: 'GRUPOS', marcador_local: 0, marcador_visitante: 2, estado: 'FINALIZADO' },
+        { id: 7, equipo_local_id: null, equipo_visitante_id: null, equipo_local: 'Puerto Azul', equipo_visitante: 'Campus FC', fecha: '2026-08-07T19:00:00', sede: 'Cancha 1', ronda: 'GRUPOS', marcador_local: 1, marcador_visitante: 1, estado: 'EN_JUEGO' },
+        { id: 8, equipo_local_id: null, equipo_visitante_id: null, equipo_local: 'San Marcos', equipo_visitante: 'Santa Maria', fecha: '2026-08-06T19:00:00', sede: 'Cancha 2', ronda: 'GRUPOS', marcador_local: 0, marcador_visitante: 1, estado: 'FINALIZADO' },
+        { id: 9, equipo_local_id: null, equipo_visitante_id: null, equipo_local: 'Deportivo Oeste', equipo_visitante: 'Union Central', fecha: '2026-08-05T19:00:00', sede: 'Cancha 1', ronda: 'GRUPOS', marcador_local: 2, marcador_visitante: 0, estado: 'FINALIZADO' },
+        { id: 10, equipo_local_id: null, equipo_visitante_id: null, equipo_local: 'Campus FC', equipo_visitante: 'Liga FC', fecha: '2026-08-04T19:00:00', sede: 'Cancha 2', ronda: 'GRUPOS', marcador_local: 1, marcador_visitante: 3, estado: 'FINALIZADO' },
+        { id: 11, equipo_local_id: null, equipo_visitante_id: null, equipo_local: 'Emelec', equipo_visitante: 'Atletico', fecha: '2026-08-03T19:00:00', sede: 'Cancha 1', ronda: 'GRUPOS', marcador_local: 1, marcador_visitante: 0, estado: 'FINALIZADO' },
+        { id: 12, equipo_local_id: null, equipo_visitante_id: null, equipo_local: 'Norte FC', equipo_visitante: 'Sur FC', fecha: '2026-08-02T19:00:00', sede: 'Cancha 2', ronda: 'GRUPOS', marcador_local: 0, marcador_visitante: 2, estado: 'FINALIZADO' },
+        { id: 13, equipo_local_id: null, equipo_visitante_id: null, equipo_local: 'Barcelona SC', equipo_visitante: 'Union Central', fecha: '2026-08-01T19:00:00', sede: 'Cancha 1', ronda: 'GRUPOS', marcador_local: 2, marcador_visitante: 0, estado: 'FINALIZADO' },
+        { id: 14, equipo_local_id: null, equipo_visitante_id: null, equipo_local: 'Liga FC', equipo_visitante: 'Santa Maria', fecha: '2026-07-31T19:00:00', sede: 'Cancha 2', ronda: 'GRUPOS', marcador_local: 4, marcador_visitante: 1, estado: 'FINALIZADO' },
+        { id: 15, equipo_local_id: null, equipo_visitante_id: null, equipo_local: 'Emelec', equipo_visitante: 'Deportivo Oeste', fecha: '2026-07-30T19:00:00', sede: 'Cancha 1', ronda: 'GRUPOS', marcador_local: 2, marcador_visitante: 1, estado: 'FINALIZADO' },
+        { id: 16, equipo_local_id: null, equipo_visitante_id: null, equipo_local: 'Atletico', equipo_visitante: 'Puerto Azul', fecha: '2026-07-29T19:00:00', sede: 'Cancha 2', ronda: 'GRUPOS', marcador_local: 1, marcador_visitante: 0, estado: 'FINALIZADO' }
       ]
     };
   }
