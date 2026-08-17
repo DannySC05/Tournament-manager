@@ -11,6 +11,7 @@ export interface Tournament {
   ganador_equipo_id: number | null;
   fecha_inicio: string;
   fecha_fin: string | null;
+  sede: string | null;
   estado: TournamentStatus;
   equipos_count?: number;
 }
@@ -22,6 +23,7 @@ export interface TournamentPayload {
   cantidad_grupos: number | null;
   fecha_inicio: string;
   fecha_fin: string | null;
+  sede?: string | null;
   estado?: TournamentStatus;
   ganador_equipo_id?: number | null;
 }

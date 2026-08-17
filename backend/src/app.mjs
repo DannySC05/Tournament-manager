@@ -95,6 +95,7 @@ function torneoPayload(body, current = {}) {
     cantidad_grupos: formato === "ELIMINACION" ? null : (body.cantidad_grupos !== undefined ? Number(body.cantidad_grupos) : current.cantidad_grupos),
     fecha_inicio: body.fecha_inicio ?? datePayloadValue(current.fecha_inicio),
     fecha_fin: body.fecha_fin !== undefined ? body.fecha_fin : datePayloadValue(current.fecha_fin),
+    sede: body.sede !== undefined ? body.sede : (current.sede ?? null),
     estado,
     ganador_equipo_id: estado === "FINALIZADO" ? (body.ganador_equipo_id !== undefined ? Number(body.ganador_equipo_id) : current.ganador_equipo_id) : null
   };
@@ -277,8 +278,8 @@ function makeRoutes() {
       const payload = torneoPayload({ ...body, estado: "BORRADOR", ganador_equipo_id: null });
       try {
         const { rows } = await db.query(
-          "INSERT INTO torneos (nombre, deporte, formato, participantes_count, cantidad_grupos, fecha_inicio, fecha_fin, estado, ganador_equipo_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
-          [payload.nombre.trim(), payload.deporte.trim(), payload.formato, payload.participantes_count, payload.cantidad_grupos, payload.fecha_inicio, payload.fecha_fin, payload.estado, payload.ganador_equipo_id]
+          "INSERT INTO torneos (nombre, deporte, formato, participantes_count, cantidad_grupos, fecha_inicio, fecha_fin, estado, ganador_equipo_id, sede) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
+          [payload.nombre.trim(), payload.deporte.trim(), payload.formato, payload.participantes_count, payload.cantidad_grupos, payload.fecha_inicio, payload.fecha_fin, payload.estado, payload.ganador_equipo_id, payload.sede?.trim() || null]
         );
         return [201, { data: rows[0] }];
       } catch (error) {
@@ -299,8 +300,8 @@ function makeRoutes() {
       if (teamTotals[0].total > payload.participantes_count) throw new HttpError(400, "No se puede reducir la cantidad de participantes por debajo de las selecciones ya registradas.");
       try {
         const { rows } = await db.query(
-          "UPDATE torneos SET nombre=$1, deporte=$2, formato=$3, participantes_count=$4, cantidad_grupos=$5, fecha_inicio=$6, fecha_fin=$7, estado=$8, ganador_equipo_id=$9, updated_at=CURRENT_TIMESTAMP WHERE id=$10 RETURNING *",
-          [payload.nombre.trim(), payload.deporte.trim(), payload.formato, payload.participantes_count, payload.cantidad_grupos, payload.fecha_inicio, payload.fecha_fin, payload.estado, payload.ganador_equipo_id, id]
+          "UPDATE torneos SET nombre=$1, deporte=$2, formato=$3, participantes_count=$4, cantidad_grupos=$5, fecha_inicio=$6, fecha_fin=$7, estado=$8, ganador_equipo_id=$9, sede=$10, updated_at=CURRENT_TIMESTAMP WHERE id=$11 RETURNING *",
+          [payload.nombre.trim(), payload.deporte.trim(), payload.formato, payload.participantes_count, payload.cantidad_grupos, payload.fecha_inicio, payload.fecha_fin, payload.estado, payload.ganador_equipo_id, payload.sede?.trim() || null, id]
         );
         return [200, { data: rows[0] }];
       } catch (error) {

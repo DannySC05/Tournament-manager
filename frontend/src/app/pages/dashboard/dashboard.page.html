@@ -6,7 +6,7 @@
     @if (currentTournament(); as tournament) {
       <app-dashboard-topbar [tournamentName]="tournament.nombre" [tournaments]="tournaments()" [selectedTournamentId]="tournament.id" [userName]="auth.user()?.nombre ?? 'Usuario'" [role]="auth.user()?.rol ?? 'CONSULTA'" [menuOpen]="menuOpen()" (menuToggle)="toggleMenu()" (tournamentSelected)="changeTournament($event)" (createTournament)="openModule('torneos')" />
       <main class="dashboard-content">
-        <app-world-cup-banner [tournament]="tournament" [phase]="currentPhase()" [durationDays]="durationDays()" [dateRange]="dateRange()" [statusLabel]="formatTournamentStatus(tournament.estado)" />
+        <app-world-cup-banner [tournament]="tournament" [hosts]="tournament.sede ? [tournament.sede] : []" [phase]="currentPhase()" [durationDays]="durationDays()" [dateRange]="dateRange()" [statusLabel]="formatTournamentStatus(tournament.estado)" />
 
         <section class="stats-grid" aria-label="Resumen del mundial">
           @for (stat of stats(); track stat.label) { <app-stat-card [icon]="stat.icon" [value]="stat.value" [label]="stat.label" [detail]="stat.detail" [tone]="stat.tone" /> }

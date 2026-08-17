@@ -63,6 +63,7 @@ export class TournamentsPage implements OnInit {
     cantidad_grupos: [8, Validators.required],
     fecha_inicio: ['', Validators.required],
     fecha_fin: ['', Validators.required],
+    sede: ['', [Validators.maxLength(100)]],
     estado: ['BORRADOR' as TournamentStatus, Validators.required],
     ganador_equipo_id: [0]
   });
@@ -75,7 +76,7 @@ export class TournamentsPage implements OnInit {
     this.winnerCandidates.set([]);
     this.formOpen.set(true);
     this.formError.set('');
-    this.form.reset({ nombre: '', formato: 'LIGA', participantes_count: 32, cantidad_grupos: 8, fecha_inicio: '', fecha_fin: '', estado: 'BORRADOR', ganador_equipo_id: 0 });
+    this.form.reset({ nombre: '', formato: 'LIGA', participantes_count: 32, cantidad_grupos: 8, fecha_inicio: '', fecha_fin: '', sede: '', estado: 'BORRADOR', ganador_equipo_id: 0 });
     this.selectedFormat.set('LIGA');
     this.participantCount.set(32);
     this.groupCount.set(8);
@@ -93,6 +94,7 @@ export class TournamentsPage implements OnInit {
       cantidad_grupos: tournament.cantidad_grupos ?? 1,
       fecha_inicio: this.dateInput(tournament.fecha_inicio),
       fecha_fin: tournament.fecha_fin ? this.dateInput(tournament.fecha_fin) : '',
+      sede: tournament.sede ?? '',
       estado: tournament.estado,
       ganador_equipo_id: tournament.ganador_equipo_id ?? 0
     });
@@ -163,6 +165,7 @@ export class TournamentsPage implements OnInit {
       cantidad_grupos: value.formato === 'ELIMINACION' ? null : value.cantidad_grupos,
       fecha_inicio: value.fecha_inicio,
       fecha_fin: value.fecha_fin,
+      sede: value.sede?.trim() || null,
       ...(current ? { estado: value.estado, ganador_equipo_id: value.estado === 'FINALIZADO' ? value.ganador_equipo_id : null } : {})
     };
     this.saving.set(true);

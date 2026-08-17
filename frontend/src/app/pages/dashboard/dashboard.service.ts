@@ -42,6 +42,7 @@ export class DashboardService {
         ganador_equipo_id: null,
         fecha_inicio: '2026-08-10T00:00:00',
         fecha_fin: '2026-09-20T00:00:00',
+        sede: null,
         estado: 'EN_CURSO',
         equipos_count: 12
       };

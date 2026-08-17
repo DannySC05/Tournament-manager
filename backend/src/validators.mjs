@@ -19,6 +19,9 @@ export function validateTorneoInput(body, { partial = false } = {}) {
   for (const field of ["nombre", "formato", "fecha_inicio", "fecha_fin"]) {
     if (!partial || body[field] !== undefined) requiredText(body[field], field);
   }
+  if (body.sede !== undefined && body.sede !== null && String(body.sede).trim() !== "") {
+    assertValid(typeof body.sede === "string" && body.sede.trim().length <= 100, "La sede debe tener hasta 100 caracteres.");
+  }
   if (!partial || body.participantes_count !== undefined) {
     assertValid(Number.isInteger(Number(body.participantes_count)), "participantes_count debe ser un numero entero.");
   }
